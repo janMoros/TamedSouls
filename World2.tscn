@@ -1,0 +1,38 @@
+[gd_scene load_steps=8 format=2]
+
+[ext_resource path="res://DirtAutoTile.tres" type="TileSet" id=1]
+[ext_resource path="res://Player.tscn" type="PackedScene" id=2]
+[ext_resource path="res://Portal.tscn" type="PackedScene" id=3]
+[ext_resource path="res://Bear.tscn" type="PackedScene" id=4]
+[ext_resource path="res://Borders.tscn" type="PackedScene" id=5]
+[ext_resource path="res://Cage.tscn" type="PackedScene" id=6]
+[ext_resource path="res://Campfire.tscn" type="PackedScene" id=7]
+
+[node name="World2" type="Node"]
+
+[node name="Player" parent="." instance=ExtResource( 2 )]
+position = Vector2( 96, 544 )
+
+[node name="Portal" parent="." instance=ExtResource( 3 )]
+position = Vector2( 1760, 672 )
+dest = "World"
+
+[node name="TileMap" type="TileMap" parent="."]
+tile_set = ExtResource( 1 )
+format = 1
+tile_data = PoolIntArray( 524293, 1, 196608, 524294, 1, 196609, 524295, 1, 196610, 589824, 1, 196608, 589825, 1, 196609, 589826, 1, 196610, 589834, 1, 196608, 589835, 1, 196609, 589836, 1, 196610, 720899, 1, 196608, 720900, 1, 196609, 720901, 1, 196609, 720902, 1, 196609, 720903, 1, 196609, 720904, 1, 196609, 720905, 1, 196609, 720906, 1, 196609, 720907, 1, 196609, 720908, 1, 196609, 720909, 1, 196609, 720910, 1, 196609, 720911, 1, 196609, 720912, 1, 196609, 720913, 1, 196609, 720914, 1, 196609, 720915, 1, 196609, 720916, 1, 196609, 720917, 1, 196609, 720918, 1, 196609, 720919, 1, 196609, 720920, 1, 196609, 720921, 1, 196609, 720922, 1, 196609, 720923, 1, 196610 )
+
+[node name="Bear3" parent="." instance=ExtResource( 4 )]
+position = Vector2( 768, 544 )
+hp = 2
+
+[node name="Borders" parent="." instance=ExtResource( 5 )]
+visible = false
+position = Vector2( -64, -64 )
+scale = Vector2( 29.682, 16.991 )
+
+[node name="Cage" parent="." instance=ExtResource( 6 )]
+position = Vector2( 1152, 672 )
+
+[node name="Campfire" parent="Cage" instance=ExtResource( 7 )]
+position = Vector2( -736, -192 )

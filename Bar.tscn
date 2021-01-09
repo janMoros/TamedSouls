@@ -1,0 +1,22 @@
+[gd_scene load_steps=3 format=2]
+
+[ext_resource path="res://Sprites/GUI/lifebar_fill.png" type="Texture" id=2]
+[ext_resource path="res://Sprites/GUI/lifebar_bg.png" type="Texture" id=3]
+
+[node name="Bar" type="HBoxContainer"]
+margin_right = 500.0
+margin_bottom = 53.0
+__meta__ = {
+"_edit_use_anchors_": false
+}
+
+[node name="Count" type="MarginContainer" parent="."]
+margin_bottom = 53.0
+
+[node name="Gauge" type="TextureProgress" parent="."]
+margin_left = 4.0
+margin_right = 400.0
+margin_bottom = 53.0
+value = 100.0
+texture_under = ExtResource( 3 )
+texture_progress = ExtResource( 2 )
