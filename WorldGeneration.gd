@@ -7,8 +7,9 @@ var save_path = SAVE_DIR + "Tilemaps.dat"
 const PLAYER = preload("res://Player.tscn")
 const ENEMY = preload("res://Bear.tscn")
 const CAMPFIRE = preload("res://Campfire.tscn")
-const STAMP = preload("res://Portal.tscn") #OJUT
 const CAGE = preload("res://Cage.tscn")
+#const STAMP = preload("res://Portal.tscn") #OJUT
+const STAMP = preload("res://Boss.tscn")
 
 const CELL_SIZE = 64
 const TOP_OFFSET = 5
@@ -34,6 +35,16 @@ const SPAWN_CHANCE = 1.0 #OF ENEMIES IF PLATFORM SIZE > MIN_SPAWN
 
 const GROUND = 7
 const CEILING = 4
+
+const HALLWAY_LEN = 20
+const BOSS_ROOM_X = 13
+
+var room_right
+var room_left
+var room_up
+var room_down
+
+var entrance_position
 
 var rng = RandomNumberGenerator.new()
 
@@ -272,6 +283,72 @@ func position_enemies(all_platforms, campfire_indices, cage_indices):
 	print("Enemies at platforms ", enemy_indices)
 	return enemy_indices
 
+func generate_boss_room():
+	# Passadís
+	for i in range(platforms[-1][1], platforms[-1][1] + HALLWAY_LEN):
+		# Sostre
+		$TileMap.set_cell(i, platforms[-1][2] - 4, 1)
+		$TileMap.set_cell(i, platforms[-1][2] - 5, 1)
+		$TileMap.set_cell(i, platforms[-1][2] - 6, 1)
+		$TileMap.set_cell(i, platforms[-1][2] - 7, 1)
+		$TileMap.update_bitmask_area(Vector2(i, platforms[-1][2] - 4))
+		$TileMap.update_bitmask_area(Vector2(i, platforms[-1][2] - 6))
+		
+		# Terra
+		$TileMap.set_cell(i, platforms[-1][2], 1)
+		$TileMap.set_cell(i, platforms[-1][2] + 1, 1)
+		$TileMap.set_cell(i, platforms[-1][2] + 2, 1)
+		$TileMap.set_cell(i, platforms[-1][2] + 3, 1)
+		$TileMap.set_cell(i, platforms[-1][2] + 4, 1)
+		$TileMap.set_cell(i, platforms[-1][2] + 5, 1)
+		$TileMap.set_cell(i, platforms[-1][2] + 6, 1)
+		$TileMap.update_bitmask_area(Vector2(i, platforms[-1][2] + 1))
+		$TileMap.update_bitmask_area(Vector2(i, platforms[-1][2] + 3))
+		$TileMap.update_bitmask_area(Vector2(i, platforms[-1][2] + 5))
+	
+	# Entrance Area2D
+	var entrance_position_cell = Vector2(platforms[-1][1] + HALLWAY_LEN, platforms[-1][2] - 1)
+	entrance_position = $TileMap.map_to_world(entrance_position_cell, true) # true->ignore half offset
+	
+	# Sala
+	 # Terra i sostre
+	for i in range(platforms[-1][1] + HALLWAY_LEN, 
+				   platforms[-1][1] + HALLWAY_LEN + BOSS_ROOM_X):
+		# Sostre
+		$TileMap.set_cell(i, platforms[-1][2] - 4, 1)
+		$TileMap.set_cell(i, platforms[-1][2] - 5, 1)
+		$TileMap.set_cell(i, platforms[-1][2] - 6, 1)
+		$TileMap.set_cell(i, platforms[-1][2] - 7, 1)
+		$TileMap.update_bitmask_area(Vector2(i, platforms[-1][2] - 6))
+		$TileMap.update_bitmask_area(Vector2(i, platforms[-1][2] - 4))
+		
+		# Terra
+		$TileMap.set_cell(i, platforms[-1][2] + 3, 1)
+		$TileMap.set_cell(i, platforms[-1][2] + 4, 1)
+		$TileMap.set_cell(i, platforms[-1][2] + 5, 1)
+		$TileMap.set_cell(i, platforms[-1][2] + 6, 1)
+		$TileMap.update_bitmask_area(Vector2(i, platforms[-1][2] + 3))
+		$TileMap.update_bitmask_area(Vector2(i, platforms[-1][2] + 5))
+	 
+	 # Paret del final
+	for i in range(platforms[-1][1] + HALLWAY_LEN + BOSS_ROOM_X, platforms[-1][1] + HALLWAY_LEN + BOSS_ROOM_X + 5):
+		for h in range(platforms[-1][2] - 8, platforms[-1][2] + 8):
+			$TileMap.set_cell(i, h, 1)
+			$TileMap.update_bitmask_area(Vector2(i, h))
+	
+	
+	var room_up_cell = Vector2(0, platforms[-1][2] - 4)
+	room_up = $TileMap.map_to_world(room_up_cell, true).y # true->ignore half offset
+	var room_down_cell = Vector2(0, platforms[-1][2] + 3)
+	room_down = $TileMap.map_to_world(room_down_cell, true).y # true->ignore half offset
+
+	room_left = entrance_position.x
+	room_right = entrance_position.x + BOSS_ROOM_X * CELL_SIZE
+	
+	var stamp_position_x = entrance_position_cell.x + BOSS_ROOM_X - 3
+	$Elements.set_cell(stamp_position_x, room_down_cell.y - 1, Global.STAMP_ID)
+	$Elements.update_bitmask_area(Vector2(stamp_position_x, room_down_cell.y - 1))
+	
 func generate_world():
 	rng.randomize() # Setups a time-based seed to generator [set_seed(s) per posar-la manualment i que sigui igual sempre]
 	#rng.set_seed(42077)
@@ -313,8 +390,8 @@ func generate_world():
 	#print("Jumps: ", negatives)
 	print("nr of platforms: ", platforms.size())
 	
-	$Elements.set_cell(platforms[-1][1] - 1, platforms[-1][2] - 1, Global.STAMP_ID)
-	$Elements.update_bitmask_area(Vector2(platforms[-1][1] - 1, platforms[-1][2] - 1))
+	#$Elements.set_cell(platforms[-1][1] - 1, platforms[-1][2] - 1, Global.STAMP_ID)
+	#$Elements.update_bitmask_area(Vector2(platforms[-1][1] - 1, platforms[-1][2] - 1))
 	
 	$Elements.set_cell(player_position.x, player_position.y - 8, Global.PLAYER_ID)
 	$Elements.update_bitmask_area(Vector2(player_position.x, player_position.y))
@@ -322,7 +399,8 @@ func generate_world():
 	var campfire_pltfrms = position_campfires(platforms)
 	var cage_pltfrms = position_cages(platforms, campfire_pltfrms)
 	var enemy_pltfrms = position_enemies(platforms,campfire_pltfrms,cage_pltfrms)
-	rng.set_seed(42077)
+	generate_boss_room()
+	#rng.set_seed(42077)
 	#return player_position
 	
 func set_borders():
@@ -400,6 +478,8 @@ func spawn_elements(new_world=true):
 		create_instance(cell,ENEMY,$Enemies, null, lvl)
 	$Elements.visible = false
 	
+	$BossRoomEntrance.position = entrance_position
+	
 func create_instance(cell, scene, parent, save_data=null, lvl=null):
 	# Cell marca la posició segons la cantonada de dalt a la dreta i els elements segons el centre
 	var offset = Vector2(CELL_SIZE / 2.0, CELL_SIZE / 2.0) 
@@ -469,6 +549,12 @@ func load_cells():
 			$Elements.set_cell(stamp_cell.x, stamp_cell.y, Global.STAMP_ID)
 			$Elements.update_bitmask_area(Vector2(stamp_cell.x, stamp_cell.y))
 			
+			entrance_position = data["entrance_position"]
+			room_left = data["room_left"]
+			room_right = data["room_right"]
+			room_up = data["room_up"]
+			room_down = data["room_down"]
+			
 		else:
 			print(error)
 			return error
@@ -492,7 +578,12 @@ func save_current_cells():
 		"enemies" : enemy_cells,
 		"campfires" : campfire_cells,
 		"cages" : cage_cells,
-		"stamp" : stamp_cell
+		"stamp" : stamp_cell,
+		"entrance_position" : entrance_position,
+		"room_left" : room_left,
+		"room_right" : room_right,
+		"room_up" : room_up,
+		"room_down" : room_down,
 	}
 	
 	var dir = Directory.new()
@@ -522,3 +613,26 @@ func setup_cells():
 	$Spikes.set_cell(0,-1,1)
 	$Spikes.set_cell(1,-1,1)
 	$Spikes.update_bitmask_area(Vector2(0,-1))
+
+
+func _on_BossRoomEntrance_body_entered(body):
+	# camera limits = boss room limits (if that doesn't work because it's too small, add a fixed value to it, keeping it centered)
+	if body in get_tree().get_nodes_in_group("player"):
+		print(room_up, " ", room_down, " ", room_left, " ", room_right)
+		print($Player/Camera2D.global_position)
+		
+		$Player/Camera2D.limit_left = room_left
+		$Player/Camera2D.limit_right = room_right + CELL_SIZE
+		$Player/Camera2D.limit_top = room_up
+		$Player/Camera2D.limit_bottom = room_down
+		
+		""" Seria força més elegant, però al posar current=false la camera no té temps de posar-se a la posició.
+		var cam_pos_x = room_left + (room_right - room_left)/2
+		var cam_pos_y = room_up + (room_down - room_up)/2
+		
+		$Player/Camera2D.global_position = Vector2(cam_pos_x, cam_pos_y)
+		$Player/Camera2D.current = false
+		print($Player/Camera2D.global_position)
+		"""
+		#$Barrier/CollisionShape2D.disabled = true
+		$Barrier/CollisionShape2D.set_deferred("disabled",true)

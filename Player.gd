@@ -42,6 +42,8 @@ var start_position
 
 var cages_cleared = 0
 
+var barrier
+
 func _ready():
 	if SaveData != null:
 		hp = SaveData["hp"]
@@ -51,9 +53,15 @@ func _ready():
 		cages_cleared = SaveData["cages_cleared"]
 	if start_position != null:
 		global_position = start_position
+		
+	barrier = $"../Barrier"
 
 func _physics_process(_delta):
 	motion.y += G
+	if $Camera2D.limit_left < global_position.x - 464:
+		$Camera2D.limit_left = global_position.x - 464 # ojut el hardcore
+		barrier.global_position.x = global_position.x - 464 - 5
+	
 	if not is_dead:
 		var friction = false
 		if Input.is_action_pressed("ui_right"):

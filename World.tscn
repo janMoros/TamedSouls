@@ -1,4 +1,4 @@
-[gd_scene load_steps=7 format=2]
+[gd_scene load_steps=8 format=2]
 
 [ext_resource path="res://DirtAutoTile.tres" type="TileSet" id=2]
 [ext_resource path="res://Borders.tscn" type="PackedScene" id=5]
@@ -78,6 +78,9 @@
 4/shapes = [  ]
 4/z_index = 0
 
+[sub_resource type="RectangleShape2D" id=2]
+extents = Vector2( 10, 900 )
+
 [node name="World" type="Node"]
 script = ExtResource( 9 )
 
@@ -105,3 +108,16 @@ scale = Vector2( 15, 6 )
 [node name="Cages" type="Node" parent="."]
 
 [node name="Campfires" type="Node" parent="."]
+
+[node name="Barrier" type="KinematicBody2D" parent="."]
+collision_layer = 2
+collision_mask = 2
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Barrier"]
+shape = SubResource( 2 )
+
+[node name="BossRoomEntrance" type="Area2D" parent="."]
+
+[node name="CollisionShape2D2" type="CollisionShape2D" parent="BossRoomEntrance"]
+shape = SubResource( 2 )
+[connection signal="body_entered" from="BossRoomEntrance" to="." method="_on_BossRoomEntrance_body_entered"]

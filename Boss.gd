@@ -14,10 +14,9 @@ const UP = Vector2(0,-1)
 export var direction = 1
 var is_dead = false
 
-var lvl = 2
-var max_hp = 2
+export var max_hp = 2
 var hp
-var max_sta = 10.0
+export var max_sta = 10.0
 var sta
 
 var is_being_hit = false
@@ -47,8 +46,6 @@ var is_positioned = false
 
 var is_about_to_fall = false
 
-var patrol = true
-
 func _ready():
 	if MAX_SPEED == 0:   # TEMPORAL PER DIFERENCIAR ENEMICS ESTÀTICS
 		is_idle = true
@@ -62,26 +59,7 @@ func _ready():
 		$RangedRayCast.position.x *= -1
 		$MagicRayCast.cast_to.x *= -1
 		$MagicRayCast.position.x *= -1
-		$VisionCone.scale *= -1
 		$AnimatedSprite.flip_h = true 
-	
-	$LevelLabel.text = str(lvl)
-	match lvl:
-		1:
-			max_hp = 2
-			max_sta = 5
-			$AnimatedSprite.modulate = "#ffffff"
-			$HPBar.modulate = "#ffb900"
-		2:
-			max_hp = 4
-			max_sta = 7
-			$AnimatedSprite.modulate = "#c2c2c2"
-			$HPBar.modulate = "#ff7032"
-		3:
-			max_hp = 6
-			max_sta = 10
-			$AnimatedSprite.modulate = "#808080"
-			$HPBar.modulate = "#ff0000"
 	
 	hp = max_hp
 	sta = max_sta
@@ -129,177 +107,160 @@ func _physics_process(delta):
 		#		change_direction()
 		
 		if not is_attacking and not is_being_hit and not is_alarmed:
-			if patrol:
-				if is_on_wall() or !$RayCast2D.is_colliding():
-					change_direction()
-
-				if direction == 1:
-					motion.x = min(motion.x + ACC, MAX_SPEED)
-				else:
-					motion.x = max(motion.x - ACC, -MAX_SPEED) 
-
-				$AnimatedSprite.play("walk")
-				 
-			else:	
-				player_position = get_tree().get_nodes_in_group("player")[0].global_position
-				player_state = get_tree().get_nodes_in_group("player")[0].state
-				
-				# L'estat de l'enemic canvia només aquí (on posteriorment hi haurà la IA que decidirà).
-				# Per això, només cal que el nivell afecti aquí.
-				match player_state: ################################################ TEMP: CANVIA DIRECTAMENT QUAN HO FA EL JUGADOR
-					"Melee":
-						if state != "Ranged" and lvl > 1:
-							state = "Ranged"
-							is_positioned = false
-					"Ranged":
-						if lvl == 3:
-							if state != "Magic":
-								state = "Magic"
-								is_positioned = false
-						elif lvl == 2:
-							if state != "Ranged":
-								state = "Ranged"
-								is_positioned = false
-					"Magic":
-						state = "Melee"
-				
-				x_dist = player_position.x - global_position.x
-
-				match state:
-					"Melee":
+			player_position = get_tree().get_nodes_in_group("player")[0].global_position
+			player_state = get_tree().get_nodes_in_group("player")[0].state
+			
+			# L'estat de l'enemic canvia només aquí (on posteriorment hi haurà la IA que decidirà).
+			# Per això, només cal que el nivell afecti aquí.
+			match player_state: ################################################ TEMP: CANVIA DIRECTAMENT QUAN HO FA EL JUGADOR
+				"Melee":
+					if state != "Ranged":
+						state = "Ranged"
 						is_positioned = false
-						########### MOVEMENT
+				"Ranged":
+					if state != "Magic":
+						state = "Magic"
+						is_positioned = false
+				"Magic":
+					state = "Melee"
+			
+			x_dist = player_position.x - global_position.x
+
+			match state:
+				"Melee":
+					is_positioned = false
+					########### MOVEMENT
+					if x_dist > 0: # Positiu -> player a la dreta de l'enemic
+						if direction == -1:
+							change_direction()
+					else:
+						if direction == 1:
+							change_direction()
+					
+					if direction == 1:
+						motion.x = min(motion.x + ACC, MAX_SPEED)
+					else:
+						motion.x = max(motion.x - ACC, -MAX_SPEED) 
+					
+					if is_on_wall() or (!$RayCast2D.is_colliding() and is_on_floor()):
+						motion = Vector2(0,0)
+						$AnimatedSprite.play("idle")
+					else:
+						$AnimatedSprite.play("walk")
+					
+					########### ATTACK
+					if not is_shield_active and $MeleeRayCast.is_colliding():
+						MeleeObjective = $MeleeRayCast.get_collider()
+						if MeleeObjective in get_tree().get_nodes_in_group("player") and (sta - MELEE_STA >= 0):
+							$StaRegen.start()
+							sta -= MELEE_STA
+							is_attacking = true
+							$AnimatedSprite.play("attack")
+							#motion = Vector2(0,0)
+							motion.x = 0
+							MeleeObjective.hit(MELEE_DMG,"Melee",direction)
+				"Ranged":
+					########### MOVEMENT (de moment, que vagi a full cap a la dreta, parlar amb el Jorge)
+					if not is_positioned:
+						var prev_dir = direction
+						if direction == -1:
+							change_direction()
+						
+						# Sí o sí direction serà 1 (dreta)
+						motion.x = min(motion.x + ACC, MAX_SPEED)
+						$AnimatedSprite.play("walk")
+						
+						if prev_dir == 1:
+							if is_on_wall() or (!$RayCast2D.is_colliding() and is_on_floor()):
+								motion = Vector2(0,0)
+								is_positioned = true
+						
+					else: # Si ja està a posició, rotar en funció del player
 						if x_dist > 0: # Positiu -> player a la dreta de l'enemic
 							if direction == -1:
 								change_direction()
 						else:
 							if direction == 1:
 								change_direction()
+								
+						$AnimatedSprite.play("idle")
+					
+					
+					########### ATTACK
+					if not is_shield_active and $RangedRayCast.is_colliding():
+						var RangedObjective = $RangedRayCast.get_collider()
+						if RangedObjective in get_tree().get_nodes_in_group("player") and (sta - RANGED_STA >= 0):
+							$StaRegen.start()
+							sta -= RANGED_STA
+							is_attacking = true
+							$AnimatedSprite.play("shoot")
+							#motion = Vector2(0,0)
+							motion.x = 0
+							
+							var arrow = ARROW.instance() # Creació de l'objecte
+							
+							arrow.launcher = "enemy"
+							
+							if sign($Position2D.position.x) == 1:
+								arrow.set_arrow_direction(1)
+							else:
+								arrow.set_arrow_direction(-1)
+
+							get_parent().add_child(arrow)
+							
+							arrow.position = $Position2D.global_position
+				"Magic":
+					########### MOVEMENT (de moment, va a full cap a la dreta)
+					if not is_positioned:
+						var prev_dir = direction
+						if direction == -1:
+							change_direction()
 						
-						if direction == 1:
-							motion.x = min(motion.x + ACC, MAX_SPEED)
-						else:
-							motion.x = max(motion.x - ACC, -MAX_SPEED) 
+						# Sí o sí direction serà 1 (dreta)
+						motion.x = min(motion.x + ACC, MAX_SPEED)
+						$AnimatedSprite.play("walk")
 						
-						if is_on_wall() or (!$RayCast2D.is_colliding() and is_on_floor()):
-							motion = Vector2(0,0)
-							$AnimatedSprite.play("idle")
-						else:
-							$AnimatedSprite.play("walk")
+						if prev_dir == 1:
+							if is_on_wall() or (!$RayCast2D.is_colliding() and is_on_floor()):
+								motion = Vector2(0,0)
+								is_positioned = true
 						
-						########### ATTACK
-						if not is_shield_active and $MeleeRayCast.is_colliding():
-							MeleeObjective = $MeleeRayCast.get_collider()
-							if MeleeObjective in get_tree().get_nodes_in_group("player") and (sta - MELEE_STA >= 0):
-								$StaRegen.start()
-								sta -= MELEE_STA
-								is_attacking = true
-								$AnimatedSprite.play("attack")
-								#motion = Vector2(0,0)
-								motion.x = 0
-								MeleeObjective.hit(MELEE_DMG,"Melee",direction)
-					"Ranged":
-						########### MOVEMENT (de moment, que vagi a full cap a la dreta, parlar amb el Jorge)
-						if not is_positioned:
-							var prev_dir = direction
+					else: # Si ja està a posició, rotar en funció del player
+						
+						if x_dist > 0: # Positiu -> player a la dreta de l'enemic
 							if direction == -1:
 								change_direction()
-							
-							# Sí o sí direction serà 1 (dreta)
-							motion.x = min(motion.x + ACC, MAX_SPEED)
-							$AnimatedSprite.play("walk")
-							
-							if prev_dir == 1:
-								if is_on_wall() or (!$RayCast2D.is_colliding() and is_on_floor()):
-									motion = Vector2(0,0)
-									is_positioned = true
-							
-						else: # Si ja està a posició, rotar en funció del player
-							if x_dist > 0: # Positiu -> player a la dreta de l'enemic
-								if direction == -1:
-									change_direction()
-							else:
-								if direction == 1:
-									change_direction()
-									
-							$AnimatedSprite.play("idle")
-						
-						
-						########### ATTACK
-						if not is_shield_active and $RangedRayCast.is_colliding():
-							var RangedObjective = $RangedRayCast.get_collider()
-							if RangedObjective in get_tree().get_nodes_in_group("player") and (sta - RANGED_STA >= 0):
-								$StaRegen.start()
-								sta -= RANGED_STA
-								is_attacking = true
-								$AnimatedSprite.play("shoot")
-								#motion = Vector2(0,0)
-								motion.x = 0
-								
-								var arrow = ARROW.instance() # Creació de l'objecte
-								
-								arrow.launcher = "enemy"
-								
-								if sign($Position2D.position.x) == 1:
-									arrow.set_arrow_direction(1)
-								else:
-									arrow.set_arrow_direction(-1)
-
-								get_parent().add_child(arrow)
-								
-								arrow.position = $Position2D.global_position
-					"Magic":
-						########### MOVEMENT (de moment, va a full cap a la dreta)
-						if not is_positioned:
-							var prev_dir = direction
-							if direction == -1:
+						else:
+							if direction == 1:
 								change_direction()
+								
+						$AnimatedSprite.play("idle")
+			
+					########### ATTACK
+					if not is_shield_active and $MagicRayCast.is_colliding():
+						var MagicObjective = $MagicRayCast.get_collider()
+						if MagicObjective in get_tree().get_nodes_in_group("player") and (sta - MAGIC_STA >= 0):
+							$StaRegen.start()
+							sta -= MAGIC_STA
 							
-							# Sí o sí direction serà 1 (dreta)
-							motion.x = min(motion.x + ACC, MAX_SPEED)
-							$AnimatedSprite.play("walk")
+							is_attacking = true
+							$AnimatedSprite.play("shoot")
+							#motion = Vector2(0,0)
+							motion.x = 0
 							
-							if prev_dir == 1:
-								if is_on_wall() or (!$RayCast2D.is_colliding() and is_on_floor()):
-									motion = Vector2(0,0)
-									is_positioned = true
+							var fireball = FIREBALL.instance() # Creació de l'objecte! (com new de C)
 							
-						else: # Si ja està a posició, rotar en funció del player
+							fireball.launcher = "enemy"
 							
-							if x_dist > 0: # Positiu -> player a la dreta de l'enemic
-								if direction == -1:
-									change_direction()
+							if sign($Position2D.position.x) == 1:
+								fireball.set_fireball_direction(1)
 							else:
-								if direction == 1:
-									change_direction()
-									
-							$AnimatedSprite.play("idle")
-				
-						########### ATTACK
-						if not is_shield_active and $MagicRayCast.is_colliding():
-							var MagicObjective = $MagicRayCast.get_collider()
-							if MagicObjective in get_tree().get_nodes_in_group("player") and (sta - MAGIC_STA >= 0):
-								$StaRegen.start()
-								sta -= MAGIC_STA
-								
-								is_attacking = true
-								$AnimatedSprite.play("shoot")
-								#motion = Vector2(0,0)
-								motion.x = 0
-								
-								var fireball = FIREBALL.instance() # Creació de l'objecte! (com new de C)
-								
-								fireball.launcher = "enemy"
-								
-								if sign($Position2D.position.x) == 1:
-									fireball.set_fireball_direction(1)
-								else:
-									fireball.set_fireball_direction(-1)
+								fireball.set_fireball_direction(-1)
 
-								get_parent().add_child(fireball)
-								
-								fireball.position = $Position2D.global_position
-				
+							get_parent().add_child(fireball)
+							
+							fireball.position = $Position2D.global_position
+			
 			if direction == 1:
 				$AnimatedSprite.flip_h = false
 			else:
@@ -328,8 +289,6 @@ func _physics_process(delta):
 		
 	$StateLabel.text = state
 	$Label2.text = str(sta)
-	$Label3.text = str(is_on_floor())
-	$Label4.text = str(is_positioned)
 	#print($AnimatedSprite.get_animation())
 	#print(is_attacking)
 	
@@ -369,13 +328,6 @@ func change_direction():
 	$RangedRayCast.position.x *= -1
 	$MagicRayCast.cast_to.x *= -1
 	$MagicRayCast.position.x *= -1
-	
-	if $VisionCone != null: # A L'ÚLTIM EL BORDER LI ELIMINA EL VISIONCONE.
-							# DE MOMENT HO DEIXO AIXÍ, PERQUÈ EL FINAL NO ESTÀ
-							# ACABAT TAMPOC.
-		$VisionCone.scale.x *= -1
-	elif patrol == true:
-		patrol = false
 
 func _on_Despawn_timeout():
 	queue_free()
@@ -385,12 +337,6 @@ func _on_animation_finished():
 	is_attacking = false
 	is_being_hit = false
 	is_alarmed = false
-
-func _on_VisionCone_body_entered(body):
-	if not is_dead and body.is_in_group("player") and patrol:
-		patrol = false
-		is_alarmed = true 
-		$AnimatedSprite.play("alert")
 
 
 func _on_StaRegen_timeout():
