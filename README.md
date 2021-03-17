@@ -1,4 +1,4 @@
-# TamedSouls
+# Tamed Souls
 Action platformer videogame - Created with Godot for my bachelor's thesis.
 
 # Introduction
@@ -15,7 +15,7 @@ Current state of the game is rather satisfactory, having already a fully functio
 
 # Image gallery
 ## World Generation
-<img src="https://user-images.githubusercontent.com/48655384/111464234-ccd2c380-8720-11eb-8cbb-ae1bb1d06613.PNG" width="23%"></img> <img src="https://user-images.githubusercontent.com/48655384/111464252-d1977780-8720-11eb-86f8-56442cad1c62.PNG" width="23%"></img> <img src="https://user-images.githubusercontent.com/48655384/111464260-d2c8a480-8720-11eb-8add-21f01f76954f.PNG" width="23%"></img> <img src="https://user-images.githubusercontent.com/48655384/111464268-d4926800-8720-11eb-9487-90ebeec85638.PNG" width="23%"></img> 
+<img src="https://user-images.githubusercontent.com/48655384/111464234-ccd2c380-8720-11eb-8cbb-ae1bb1d06613.PNG" width="24%"></img> <img src="https://user-images.githubusercontent.com/48655384/111464252-d1977780-8720-11eb-86f8-56442cad1c62.PNG" width="24%"></img> <img src="https://user-images.githubusercontent.com/48655384/111464260-d2c8a480-8720-11eb-8add-21f01f76954f.PNG" width="24%"></img> <img src="https://user-images.githubusercontent.com/48655384/111464268-d4926800-8720-11eb-9487-90ebeec85638.PNG" width="24%"></img> 
 
 ## Gameplay
 <img src="https://user-images.githubusercontent.com/48655384/111465912-ed038200-8722-11eb-99f2-7b2398b6c18b.png" width="32%"></img> <img src="https://user-images.githubusercontent.com/48655384/111465914-ed9c1880-8722-11eb-9b98-3ae4d91daefe.png" width="32%"></img> <img src="https://user-images.githubusercontent.com/48655384/111465916-ee34af00-8722-11eb-8249-04b63276ae16.png" width="32%"></img> 
