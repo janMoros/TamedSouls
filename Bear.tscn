@@ -45,30 +45,30 @@ animations = [ {
 "name": "alert",
 "speed": 5.0
 }, {
-"frames": [ ExtResource( 6 ) ],
-"loop": true,
-"name": "dead",
-"speed": 5.0
-}, {
 "frames": [ ExtResource( 13 ), ExtResource( 14 ), ExtResource( 12 ) ],
 "loop": false,
 "name": "shoot",
-"speed": 10.0
-}, {
-"frames": [ ExtResource( 4 ), ExtResource( 3 ), ExtResource( 1 ), ExtResource( 2 ) ],
-"loop": true,
-"name": "walk",
-"speed": 8.0
-}, {
-"frames": [ ExtResource( 11 ), ExtResource( 10 ), ExtResource( 9 ) ],
-"loop": false,
-"name": "attack",
 "speed": 10.0
 }, {
 "frames": [ ExtResource( 15 ) ],
 "loop": false,
 "name": "hit",
 "speed": 5.0
+}, {
+"frames": [ ExtResource( 11 ), ExtResource( 10 ), ExtResource( 9 ) ],
+"loop": false,
+"name": "attack",
+"speed": 10.0
+}, {
+"frames": [ ExtResource( 6 ) ],
+"loop": true,
+"name": "dead",
+"speed": 5.0
+}, {
+"frames": [ ExtResource( 4 ), ExtResource( 3 ), ExtResource( 1 ), ExtResource( 2 ) ],
+"loop": true,
+"name": "walk",
+"speed": 8.0
 } ]
 
 [sub_resource type="CapsuleShape2D" id=3]
@@ -229,7 +229,7 @@ position = Vector2( -2, 0 )
 position = Vector2( 0.0947495, 0.260308 )
 scale = Vector2( 0.095, 0.095 )
 frames = SubResource( 4 )
-frame = 6
+frame = 3
 playing = true
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="Shield"]

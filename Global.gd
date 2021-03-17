@@ -31,6 +31,19 @@ const KNOCKBACK_Y = -100
 
 ################################ VARIABLES
 
+var controller_connected = false
+
+var world_size
+
+var boss_room_limits = []
+
+var lightning_target
+
+var lightning
+
+var final_time
+
+var final_souls
 
 ################################ FUNCTIONS
 

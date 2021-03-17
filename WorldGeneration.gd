@@ -16,7 +16,8 @@ const TOP_OFFSET = 5
 
 const START_POS = Vector2(0,4)
 
-const MIN_LEN_INIT = 3
+const LEN_INIT = 10
+
 const MIN_LEN = 2
 const MAX_LEN = 7
 
@@ -25,7 +26,7 @@ const MAX_VOID_X = 5
 const MAX_VOID_Y = 3
 const MIN_VOID_Y = -2 
 
-const WORLD_LEN = 300
+var WORLD_LEN = 300
 
 const N_CAMPFIRES = 2
 onready var N_CAGES = N_CAMPFIRES + 1
@@ -56,8 +57,16 @@ var loaded_data
 
 var player_start_pos = Vector2(0,4)
 
+var length # Of the generated world, as a string
+
 # Called when the node enters the scene tree for the first time.
 func _ready():
+	#rng.set_seed(42077)
+	#player_start_pos = call_deferred("generate_world")
+	#return
+	
+	
+	
 	loaded_data = Save.load_data()
 	if typeof(loaded_data) != TYPE_DICTIONARY: # O hi ha hagut un error o no existeix
 		loaded_data = { # TODO: PASSAR AIXÒ A CONSTANTS 
@@ -65,11 +74,14 @@ func _ready():
 			"estus" : 5,
 			"sta" : 10,
 			"souls" : 1000,
-			"cages_cleared" : 0
+			"cages_cleared" : 0,
+			"time" : 0
 		}
 		#print(Save.save_data(max_hp,max_estus,max_sta,global_position,souls))
 		print(Save.save_dict_data(loaded_data))
-	
+		
+		WORLD_LEN = Global.world_size + 20
+		
 		player_start_pos = call_deferred("generate_world")
 		call_deferred("spawn_elements")
 		call_deferred("set_borders")
@@ -79,7 +91,6 @@ func _ready():
 		call_deferred("load_cells")
 		call_deferred("spawn_elements", false)
 		call_deferred("set_borders")
-
 
 func create_void(start_pos:Vector2, length):
 	var pos = start_pos
@@ -100,7 +111,8 @@ func create_void(start_pos:Vector2, length):
 	var bot_limit = min(pos.y + MAX_VOID_X, GROUND)
 	pos.y = rng.randi_range(top_limit, bot_limit)
 	return pos
-	
+
+
 func create_platform(start_pos:Vector2, length):
 	var pos = start_pos
 	for i in range(length):
@@ -219,7 +231,7 @@ func generate_wall(bottom, max_h):
 			$TileMap.update_bitmask_area(Vector2(i, h))
 			
 func clear_entrance(player_position, max_h):
-	for i in range(player_position.x - 8, player_position.x + 8):
+	for i in range(player_position.x - 10, player_position.x + 12):
 		for h in range(max_h - 16, player_position.y - 4):
 			$TileMap.set_cell(i, h, 1)
 			$TileMap.update_bitmask_area(Vector2(i, h))
@@ -249,7 +261,7 @@ func position_cages(all_platforms, campfire_indices):
 	var cage_indices = []
 	var nPlatforms = all_platforms.size()
 	
-	var delimiters = [0] + campfire_indices + [nPlatforms-1]
+	var delimiters = [1] + campfire_indices + [nPlatforms-1] # 1 perquè a la 2a plataforma hi hagi un enemic
 	#print(delimiters)
 	for d in range(delimiters.size()):
 		if delimiters[d] != delimiters[-1]:
@@ -266,7 +278,7 @@ func position_cages(all_platforms, campfire_indices):
 
 func position_enemies(all_platforms, campfire_indices, cage_indices):
 	var enemy_indices = []
-	for i in range(1, all_platforms.size()):
+	for i in range(1, all_platforms.size() - 1): # -1 perquè la última forma part del passadís
 		# platform = [start_x, end_x, y]
 		var plat_size = all_platforms[i][1] - all_platforms[i][0]
 		if plat_size >= MIN_SPAWN and !campfire_indices.has(i) and !cage_indices.has(i):
@@ -285,14 +297,20 @@ func position_enemies(all_platforms, campfire_indices, cage_indices):
 
 func generate_boss_room():
 	# Passadís
-	for i in range(platforms[-1][1], platforms[-1][1] + HALLWAY_LEN):
+	for i in range(platforms[-1][1] - 1, platforms[-1][1] + HALLWAY_LEN):
 		# Sostre
 		$TileMap.set_cell(i, platforms[-1][2] - 4, 1)
 		$TileMap.set_cell(i, platforms[-1][2] - 5, 1)
 		$TileMap.set_cell(i, platforms[-1][2] - 6, 1)
 		$TileMap.set_cell(i, platforms[-1][2] - 7, 1)
+		$TileMap.set_cell(i, platforms[-1][2] - 8, 1)
+		$TileMap.set_cell(i, platforms[-1][2] - 9, 1)
+		$TileMap.set_cell(i, platforms[-1][2] - 10, 1)
+		$TileMap.set_cell(i, platforms[-1][2] - 11, 1)
 		$TileMap.update_bitmask_area(Vector2(i, platforms[-1][2] - 4))
 		$TileMap.update_bitmask_area(Vector2(i, platforms[-1][2] - 6))
+		$TileMap.update_bitmask_area(Vector2(i, platforms[-1][2] - 8))
+		$TileMap.update_bitmask_area(Vector2(i, platforms[-1][2] - 10))
 		
 		# Terra
 		$TileMap.set_cell(i, platforms[-1][2], 1)
@@ -349,17 +367,23 @@ func generate_boss_room():
 	$Elements.set_cell(stamp_position_x, room_down_cell.y - 1, Global.STAMP_ID)
 	$Elements.update_bitmask_area(Vector2(stamp_position_x, room_down_cell.y - 1))
 	
+	Global.boss_room_limits = [room_left, room_right, room_up, room_down]
+	
 func generate_world():
 	rng.randomize() # Setups a time-based seed to generator [set_seed(s) per posar-la manualment i que sigui igual sempre]
 	#rng.set_seed(42077)
 	
-	var len_init = rng.randi_range(MIN_LEN_INIT, MAX_LEN)
-	
-	var position = create_platform(START_POS, len_init)
+	var position = create_platform(START_POS, LEN_INIT)
 	
 	var player_position = START_POS
-	player_position.x += (position.x - START_POS.x) / 2  # Divisió entera
+	#player_position.x += (position.x - START_POS.x) / 2  # Divisió entera
+	player_position.x += 1
 	player_position.y -= 1
+	
+	#position = create_void(position, MIN_VOID_X)
+	position.x += MIN_VOID_X
+	
+	position = create_platform(position, MIN_SPAWN)
 	
 	var prev = 1 # 1=platform, 0=void
 	
@@ -469,16 +493,34 @@ func spawn_elements(new_world=true):
 			Global.CAGE_ID:
 				create_instance(cell,CAGE,$Cages)
 			Global.STAMP_ID:
+				print("Boss position: ",$Elements.map_to_world(cell, true))
 				create_instance(cell,STAMP,self)
 	
 	rng.set_seed(42077) # Sempre la mateixa perquè els enemics siguin iguals quan es recarregui l'escena.
-						# Per a partides diferents els enemics ho seran també, i per tant "és igual" això.
+						# Per a partides diferents els enemics ho seran també, i la llista no està ordenada per coordenades.
+	var first_x = 9999999
+	
+	var lvls = []
+	
 	for cell in enemy_cells:
-		var lvl = rng.randi_range(1, 3)
+		lvls.append(rng.randi_range(1, 3))
+		if cell[0] < first_x:
+			first_x = cell[0]
+	
+	var j = 0
+	for cell in enemy_cells:
+		var lvl
+		if cell[0] == first_x:
+			lvl = 1
+		else:
+			lvl = lvls[j]
 		create_instance(cell,ENEMY,$Enemies, null, lvl)
+		j += 1
+	
 	$Elements.visible = false
 	
 	$BossRoomEntrance.position = entrance_position
+	$BossRoomEntrance.position.x += 10
 	
 func create_instance(cell, scene, parent, save_data=null, lvl=null):
 	# Cell marca la posició segons la cantonada de dalt a la dreta i els elements segons el centre
@@ -554,7 +596,16 @@ func load_cells():
 			room_right = data["room_right"]
 			room_up = data["room_up"]
 			room_down = data["room_down"]
+			Global.boss_room_limits = [room_left, room_right, room_up, room_down]
 			
+			length = data["world_size"]
+			match length:
+				"Short": Global.world_size = 100
+				"Mid": Global.world_size = 200
+				"Long": Global.world_size = 300
+				_: Global.world_size = 100
+			print(length)
+			print(Global.world_size)
 		else:
 			print(error)
 			return error
@@ -571,6 +622,12 @@ func save_current_cells():
 	var cage_cells = $Elements.get_used_cells_by_id(Global.CAGE_ID)
 	var stamp_cell = $Elements.get_used_cells_by_id(Global.STAMP_ID)[0]
 	
+	match Global.world_size:
+		100: length = "Short"
+		200: length = "Mid"
+		300: length = "Long"
+		_: length = "Short" # Default
+	
 	var data = {
 		"ground" : ground_cells,
 		"spikes" : spike_cells,
@@ -584,6 +641,7 @@ func save_current_cells():
 		"room_right" : room_right,
 		"room_up" : room_up,
 		"room_down" : room_down,
+		"world_size" : length
 	}
 	
 	var dir = Directory.new()
@@ -618,7 +676,7 @@ func setup_cells():
 func _on_BossRoomEntrance_body_entered(body):
 	# camera limits = boss room limits (if that doesn't work because it's too small, add a fixed value to it, keeping it centered)
 	if body in get_tree().get_nodes_in_group("player"):
-		print(room_up, " ", room_down, " ", room_left, " ", room_right)
+		print("up: ", room_up, ",down: ", room_down, ",left: ", room_left, ",right: ", room_right)
 		print($Player/Camera2D.global_position)
 		
 		$Player/Camera2D.limit_left = room_left
@@ -636,3 +694,16 @@ func _on_BossRoomEntrance_body_entered(body):
 		"""
 		#$Barrier/CollisionShape2D.disabled = true
 		$Barrier/CollisionShape2D.set_deferred("disabled",true)
+		$Boss.state = "Jump"
+		$Boss.hp = $Boss.starting_hp
+		
+		var entrance_position_cell = $TileMap.world_to_map(entrance_position)
+		#$TileMap.map_to_world(entrance_position_cell, true)
+		for j in range(entrance_position_cell.y - 2, entrance_position_cell.y + 1):
+			$TileMap.set_cell(entrance_position_cell.x - 1, j, 1)
+			#$TileMap.set_cell(entrance_position_cell.x - 2, j, 1)
+			#$TileMap.set_cell(entrance_position_cell.x - 3, j, 1)
+			$TileMap.update_bitmask_area(Vector2(entrance_position_cell.x - 2, j))
+	
+		$BossRoomEntrance/CollisionShape2D.set_deferred("disabled", true)
+

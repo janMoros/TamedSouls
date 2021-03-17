@@ -44,25 +44,42 @@ var cages_cleared = 0
 
 var barrier
 
+var time = 0
+
 func _ready():
+	$CanvasLayer/FadeOut/AnimationPlayer.play("fade_out")
 	if SaveData != null:
 		hp = SaveData["hp"]
 		estus = SaveData["estus"]
 		sta = SaveData["sta"]
 		souls = SaveData["souls"]
 		cages_cleared = SaveData["cages_cleared"]
+		time = SaveData["time"]
 	if start_position != null:
 		global_position = start_position
 		
 	barrier = $"../Barrier"
 
+func _process(delta): # aquest s'executa si o si 60 cops per segon
+	if not is_dead:
+		time += delta
+		var seconds = fmod(time,60)
+		var minutes = time / 60
+		$CanvasLayer/TimerGUI/Label.text = "%02d:%02d" % [minutes, seconds]
+
 func _physics_process(_delta):
 	motion.y += G
-	if $Camera2D.limit_left < global_position.x - 464:
-		$Camera2D.limit_left = global_position.x - 464 # ojut el hardcore
-		barrier.global_position.x = global_position.x - 464 - 5
+	
+	if not "test" in get_parent().name:
+		if $Camera2D.limit_left < global_position.x - 464:
+			$Camera2D.limit_left = global_position.x - 464 # ojut el hardcore
+			barrier.global_position.x = global_position.x - 464 - 5
 	
 	if not is_dead:
+		#if Input.is_action_pressed("ui_back_to_menu"):
+		if Input.is_action_just_pressed("ui_back_to_menu"):
+			get_tree().change_scene("res://Menu.tscn")
+		
 		var friction = false
 		if Input.is_action_pressed("ui_right"):
 			motion.x = min(motion.x+ACC,MAX_SPEED)
@@ -199,8 +216,8 @@ func _physics_process(_delta):
 		
 		########################################################################
 		##############################DEBUG#####################################
-		if Input.is_action_just_pressed("debug_save"):
-			Save.save_data(hp,estus,sta,souls,cages_cleared)
+		if OS.is_debug_build() and Input.is_action_just_pressed("debug_save"):
+			Save.save_data(hp,estus,sta,souls,cages_cleared,time)
 			print("data saved")
 		########################################################################
 		########################################################################
@@ -218,16 +235,34 @@ func _physics_process(_delta):
 		
 	elif is_in_deathScreen: # Si està mort I a la deathScreen
 		$CanvasLayer/ColorRect.visible = true
+		
+		if Global.controller_connected:
+			$CanvasLayer/ColorRect/CanPay/Start.visible = true
+			$CanvasLayer/ColorRect/CanPay.text = "HAS MORT\n\nPREM   ·   PER REVIURE\n[250 ÀNIMES]\n"
+			$CanvasLayer/ColorRect/CantPay/Start.visible = true
+			$CanvasLayer/ColorRect/CantPay.text = "HAS MORT\n\nNO TENS LES 250 ÀNIMES \nNECESSÀRIES PER REVIURE\n\nPREM   ·   PER \nMORIR DEFINITIVAMENT"
+		else:
+			$CanvasLayer/ColorRect/CanPay/Start.visible = false
+			$CanvasLayer/ColorRect/CanPay.text = "HAS MORT\n\nPREM ENTER PER REVIURE\n[250 ÀNIMES]\n"
+			$CanvasLayer/ColorRect/CantPay/Start.visible = false
+			$CanvasLayer/ColorRect/CantPay.text = "HAS MORT\n\nNO TENS LES 250 ÀNIMES \nNECESSÀRIES PER REVIURE\n\nPREM ENTER PER \nMORIR DEFINITIVAMENT\n"
+
+		
 		if souls - RESPAWN_PRICE >= 0:
+			$CanvasLayer/ColorRect/CanPay.visible = true
+			$CanvasLayer/ColorRect/CantPay.visible = false
+			
 			if Input.is_action_just_pressed("ui_respawn"):
 				spend_souls(RESPAWN_PRICE)
 				var temp_data =  Save.load_data()
 				if typeof(temp_data) != TYPE_DICTIONARY: # si no s'ha carregat bé
 					SaveData["souls"] = souls
+					SaveData["time"] = time
 					Save.save_dict_data(SaveData) # Guardem el que hem carregat al principi
 					print(SaveData)
 				else:
 					temp_data["souls"] = souls
+					temp_data["time"] = time
 					Save.save_dict_data(temp_data)
 				
 				respawn()
@@ -269,24 +304,44 @@ func die():
 		$DeadTimer.start()
 		#$CollisionShape2D.set_deferred("disabled", true)
 
-func hit(dmg,type,direction):
+func hit(dmg,type,direction, from_boss=false):
 	if not is_dead: # not is_contact_on_CD and not is_dead: [HO DEIXO AIXI DE MOMENT SENSE ELIMINAR
 		is_contact_on_CD = true                            # L'ESTRUCTURA DEL CD PER SI CAL + TARD]
 		is_being_hit = true
 		$ContactCD.start()
 		$Sprite.play("hit")
 		
-		# commented for god mode
-		hp -= dmg * Global.modifyer(type,state)
 		
-		if hp > 0:
-			$CanvasLayer/GUI.update_hp(hp)
+		if type == "Jump":
+			# commented for god mode
+			hp -= dmg
+			
+			if hp > 0:
+				$CanvasLayer/GUI.update_hp(hp)
+				motion.x = Global.KNOCKBACK_X * direction * 7
+				motion.y = Global.KNOCKBACK_Y
+			else:
+				$CanvasLayer/GUI.update_hp(0)
+				motion.x = Global.KNOCKBACK_X * direction
+				die()
+				
+			
 		else:
-			$CanvasLayer/GUI.update_hp(0)
-			die()
-		
-		motion.x = Global.KNOCKBACK_X * direction
-		motion.y = Global.KNOCKBACK_Y
+			# commented for god mode
+			hp -= dmg * Global.modifyer(type,state)
+			
+			if hp > 0:
+				$CanvasLayer/GUI.update_hp(hp)
+			else:
+				$CanvasLayer/GUI.update_hp(0)
+				die()
+			
+			if from_boss:
+				motion.x = Global.KNOCKBACK_X * direction * 5
+				motion.y = Global.KNOCKBACK_Y * 3
+			else:	
+				motion.x = Global.KNOCKBACK_X * direction
+				motion.y = Global.KNOCKBACK_Y
 
 func heal(points):
 	hp = min(hp + points, max_hp)
@@ -324,7 +379,11 @@ func _on_ContactCD_timeout():
 	is_contact_on_CD = false
 
 func _on_StaRegen_timeout():
-	if sta + 1 <= max_sta: # Ojut el hardcode
-		sta = sta + 1
+	if sta + 0.75 <= max_sta: # Ojut el hardcode
+		sta = sta + 0.75
 		$CanvasLayer/GUI.update_sta(sta)
 
+
+
+func _on_FadeOut_animation_finished(anim_name):
+	$CanvasLayer/FadeOut.hide()

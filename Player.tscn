@@ -1,4 +1,4 @@
-[gd_scene load_steps=25 format=2]
+[gd_scene load_steps=28 format=2]
 
 [ext_resource path="res://Sprites/Player/Idle0.png" type="Texture" id=1]
 [ext_resource path="res://Player.gd" type="Script" id=2]
@@ -20,6 +20,8 @@
 [ext_resource path="res://Comfortaa-Bold.ttf" type="DynamicFontData" id=18]
 [ext_resource path="res://Sprites/Player/Drink0.png" type="Texture" id=19]
 [ext_resource path="res://GUI2.tscn" type="PackedScene" id=20]
+[ext_resource path="res://Sprites/GUI/start.png" type="Texture" id=21]
+[ext_resource path="res://TimerGUI.tscn" type="PackedScene" id=22]
 
 [sub_resource type="SpriteFrames" id=1]
 animations = [ {
@@ -28,9 +30,19 @@ animations = [ {
 "name": "idle",
 "speed": 5.0
 }, {
-"frames": [ ExtResource( 13 ) ],
+"frames": [ ExtResource( 7 ) ],
 "loop": true,
-"name": "dead",
+"name": "fall",
+"speed": 5.0
+}, {
+"frames": [ ExtResource( 9 ), ExtResource( 6 ), ExtResource( 11 ), ExtResource( 5 ), ExtResource( 8 ), ExtResource( 3 ) ],
+"loop": true,
+"name": "run",
+"speed": 10.0
+}, {
+"frames": [ ExtResource( 10 ) ],
+"loop": true,
+"name": "jump",
 "speed": 5.0
 }, {
 "frames": [ ExtResource( 16 ), ExtResource( 17 ) ],
@@ -43,9 +55,9 @@ animations = [ {
 "name": "drink",
 "speed": 5.0
 }, {
-"frames": [ ExtResource( 10 ) ],
-"loop": true,
-"name": "jump",
+"frames": [ ExtResource( 14 ) ],
+"loop": false,
+"name": "hit",
 "speed": 5.0
 }, {
 "frames": [ ExtResource( 12 ) ],
@@ -53,19 +65,9 @@ animations = [ {
 "name": "shoot",
 "speed": 5.0
 }, {
-"frames": [ ExtResource( 9 ), ExtResource( 6 ), ExtResource( 11 ), ExtResource( 5 ), ExtResource( 8 ), ExtResource( 3 ) ],
+"frames": [ ExtResource( 13 ) ],
 "loop": true,
-"name": "run",
-"speed": 10.0
-}, {
-"frames": [ ExtResource( 7 ) ],
-"loop": true,
-"name": "fall",
-"speed": 5.0
-}, {
-"frames": [ ExtResource( 14 ) ],
-"loop": false,
-"name": "hit",
+"name": "dead",
 "speed": 5.0
 } ]
 
@@ -80,6 +82,22 @@ extents = Vector2( 17.8152, 24.6514 )
 size = 31
 outline_size = 1
 font_data = ExtResource( 18 )
+
+[sub_resource type="Animation" id=5]
+resource_name = "fade_out"
+length = 0.5
+tracks/0/type = "value"
+tracks/0/path = NodePath(".:color")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/keys = {
+"times": PoolRealArray( 0, 0.5 ),
+"transitions": PoolRealArray( 1, 1 ),
+"update": 0,
+"values": [ Color( 0, 0, 0, 1 ), Color( 0, 0, 0, 0 ) ]
+}
 
 [node name="Player" type="KinematicBody2D" groups=[
 "player",
@@ -170,7 +188,7 @@ margin_bottom = 96.0
 custom_fonts/font = SubResource( 4 )
 text = "HAS MORT
 
-PREM START PER REVIURE
+PREM   ·   PER REVIURE
 [250 ÀNIMES]
 "
 align = 1
@@ -178,6 +196,11 @@ valign = 1
 __meta__ = {
 "_edit_use_anchors_": false
 }
+
+[node name="Start" type="Sprite" parent="CanvasLayer/ColorRect/CanPay"]
+position = Vector2( 151, 95 )
+scale = Vector2( 3, 3 )
+texture = ExtResource( 21 )
 
 [node name="CantPay" type="Label" parent="CanvasLayer/ColorRect"]
 visible = false
@@ -195,7 +218,7 @@ text = "HAS MORT
 NO TENS LES 250 ÀNIMES 
 NECESSÀRIES PER REVIURE
 
-PREM START PER 
+PREM   ·   PER 
 MORIR DEFINITIVAMENT
 "
 align = 1
@@ -204,18 +227,39 @@ __meta__ = {
 "_edit_use_anchors_": false
 }
 
+[node name="Start" type="Sprite" parent="CanvasLayer/ColorRect/CantPay"]
+position = Vector2( 239.5, 211.5 )
+scale = Vector2( 3, 3 )
+texture = ExtResource( 21 )
+
 [node name="GUI" parent="CanvasLayer" instance=ExtResource( 15 )]
 margin_top = -0.707123
 margin_bottom = 465.96
 rect_scale = Vector2( 0.7, 0.7 )
 
 [node name="GUI2" parent="CanvasLayer" instance=ExtResource( 20 )]
+margin_top = -600.656
+margin_bottom = -0.656372
+
+[node name="TimerGUI" parent="CanvasLayer" instance=ExtResource( 22 )]
+
+[node name="FadeOut" type="ColorRect" parent="CanvasLayer"]
+anchor_right = 1.0
+anchor_bottom = 1.0
+color = Color( 0, 0, 0, 1 )
+__meta__ = {
+"_edit_use_anchors_": false
+}
+
+[node name="AnimationPlayer" type="AnimationPlayer" parent="CanvasLayer/FadeOut"]
+anims/fade_out = SubResource( 5 )
 
 [node name="ContactCD" type="Timer" parent="."]
 wait_time = 0.5
 one_shot = true
 
 [node name="StaRegen" type="Timer" parent="."]
+wait_time = 0.5
 autostart = true
 
 [node name="Label" type="Label" parent="."]
@@ -236,5 +280,6 @@ cast_to = Vector2( 55, 0 )
 [connection signal="animation_finished" from="Sprite" to="." method="_on_Sprite_animation_finished"]
 [connection signal="body_entered" from="SwordHit" to="." method="_on_SwordHit_body_entered"]
 [connection signal="timeout" from="DeadTimer" to="." method="_on_DeadTimer_timeout"]
+[connection signal="animation_finished" from="CanvasLayer/FadeOut/AnimationPlayer" to="." method="_on_FadeOut_animation_finished"]
 [connection signal="timeout" from="ContactCD" to="." method="_on_ContactCD_timeout"]
 [connection signal="timeout" from="StaRegen" to="." method="_on_StaRegen_timeout"]

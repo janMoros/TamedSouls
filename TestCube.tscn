@@ -1,0 +1,30 @@
+[gd_scene load_steps=5 format=2]
+
+[ext_resource path="res://test_cube.gd" type="Script" id=1]
+
+[sub_resource type="Gradient" id=4]
+offsets = PoolRealArray( 0, 1, 2.361 )
+colors = PoolColorArray( 1, 0, 0, 1, 0, 0.505882, 1, 1, 0.396429, 0.305336, 0.603571, 1 )
+
+[sub_resource type="GradientTexture" id=5]
+gradient = SubResource( 4 )
+width = 64
+
+[sub_resource type="CapsuleShape2D" id=6]
+radius = 24.4712
+height = 15.2444
+
+[node name="TestCube" type="KinematicBody2D"]
+position = Vector2( -236.107, -184.238 )
+script = ExtResource( 1 )
+__meta__ = {
+"_edit_group_": true
+}
+
+[node name="Sprite" type="Sprite" parent="."]
+scale = Vector2( 1, 64 )
+texture = SubResource( 5 )
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+position = Vector2( 0, -32 )
+shape = SubResource( 6 )

@@ -1,14 +1,14 @@
 extends KinematicBody2D
 
 var motion = Vector2(0,0)
-export var MAX_SPEED = 250
+export var MAX_SPEED = 400
 export var G = 10
 export var JUMP_FORCE = -400
 export var ACC = 50
 export var MELEE_DMG = 1
 export var RANGED_DMG = 2
 export var MAGIC_DMG = 3
-export var soul_value = 100
+export var soul_value = 1000
 const UP = Vector2(0,-1)
 
 export var direction = 1
@@ -16,35 +16,44 @@ var is_dead = false
 
 export var max_hp = 2
 var hp
+var starting_hp
 export var max_sta = 10.0
 var sta
 
 var is_being_hit = false
 var is_attacking = false
 var is_idle = false
-var is_alarmed = false
-var is_shield_active = false
 
-#var state = "Melee" # or "Magic" or "Ranged"
-export(String, "Melee", "Magic", "Ranged") var state = "Melee"
-
-const ARROW = preload("res://Arrow.tscn")
-const FIREBALL = preload("res://Fireball.tscn")
+var state = "Wait" 
+#var state = "Lightning" # "Jump" "Minions"
 
 const MAGIC_STA = 3
 const RANGED_STA = 2
 const MELEE_STA = 1
-const SHIELD_STA = 8
 
 var MeleeObjective : Object
 
 var player_position = Vector2()
-var player_state = "Melee"
 var x_dist = 0
 
-var is_positioned = false
+var JUMP_DMG = 5
+var is_jumping = false
+var jump_order = false
+var jump_timer = false
 
-var is_about_to_fall = false
+const MINION = preload("res://Minion.tscn")
+var must_move = false 
+var prev_dist = 0
+const MAX_MINIONS = 7
+var minion_order = false
+var is_launching = false
+
+const LIGHTNING = preload("res://DebugTesting/Lightning.tscn")
+const TARGET = preload("res://LightningTarget.tscn")
+var is_positioned = false
+var can_zap_spawn = false # can spawn lightning and target?
+
+var player
 
 func _ready():
 	if MAX_SPEED == 0:   # TEMPORAL PER DIFERENCIAR ENEMICS ESTÀTICS
@@ -55,101 +64,212 @@ func _ready():
 		$RayCast2D.position.x *= -1
 		$MeleeRayCast.cast_to.x *= -1
 		$Position2D.position.x *= -1
-		$RangedRayCast.cast_to.x *= -1
-		$RangedRayCast.position.x *= -1
-		$MagicRayCast.cast_to.x *= -1
-		$MagicRayCast.position.x *= -1
 		$AnimatedSprite.flip_h = true 
+		$WallRaycast.cast_to.x *= -1
+		$MinionSpawn.position.x *= -1
+		$FrontWallRaycast.cast_to.x *= -1
 	
-	hp = max_hp
 	sta = max_sta
 	
+	player = get_tree().get_nodes_in_group("player")[0]
+	
+	starting_hp = max_hp - 0.15 * max_hp * player.cages_cleared
+	
+	#hp = max_hp
+	hp = starting_hp
+	
 func hit(dmg,type,direction):
-	if not is_shield_active: # Pels atacs melee del PJ
-		hp -= dmg * Global.modifyer(type,state)
-		$HPBar.value = hp * 100 / max_hp
-			
-		is_being_hit = true
-		$AnimatedSprite.play("hit")
+	var fake_state
+	match state:
+		"Jump": fake_state = "Melee"
+		"Minions": fake_state = "Magic"
+		"Lightning": fake_state = "Magic"
+		"Wait": fake_state = "Melee" # NO HAURIA DE PASSAR MAI
+	
+	hp -= dmg * Global.modifyer(type,fake_state)
+	# $HPBar.value = hp * 100 / max_hp
 		
-		if hp <= 0: # Die
-			is_dead = true
-			motion = Vector2(0,0)
-			$AnimatedSprite.play("dead")
-			if direction == 1:
-				$AnimatedSprite.rotation_degrees = -160
-			else:
-				$AnimatedSprite.rotation_degrees = 160
-			position = Vector2(position.x, position.y + 15)
-			$CollisionShape2D.set_deferred("disabled", true) # Important fer-ho deferred
-			$DespawnTimer.start()
-			
-			get_tree().call_group("player","recieve_souls",soul_value)
-		#else:
-		if not is_positioned:
-			motion.x = Global.KNOCKBACK_X * direction
-			motion.y = Global.KNOCKBACK_Y
+	is_being_hit = true
+	$AnimatedSprite.play("hit")
+	
+	if hp <= 0: # Die
+		is_dead = true
+		motion = Vector2(0,0)
+		$AnimatedSprite.play("dead")
+		if direction == 1:
+			$AnimatedSprite.rotation_degrees = 160
 		else:
-			motion.x = Global.KNOCKBACK_X * direction
-			motion.y = Global.KNOCKBACK_Y * 0.7
-			#is_positioned = false
+			$AnimatedSprite.rotation_degrees = -160
+
+		$CollisionShape2D.rotation_degrees = 90
+		$AnimatedSprite.position.y = 4
+		
+		#$CollisionShape2D.set_deferred("disabled", true) # Important fer-ho deferred
+		set_collision_mask_bit(0, false)
+		set_collision_layer_bit(0, false)
+		set_collision_mask_bit(2, true)
+		set_collision_layer_bit(2, true)
+		$DespawnTimer.start()
+		
+		get_tree().call_group("player","recieve_souls",soul_value)
+	#else:
+		motion.x = Global.KNOCKBACK_X * direction
+		motion.y = Global.KNOCKBACK_Y
 
 func _physics_process(delta):
-	if not is_dead:
-#		if hp > 20 * max_hp / 100:
-#			$HPBar.modulate = "8cff23"
-#		else:
-#			$HPBar.modulate = "ff0000"
-		
-		#if not is_idle: # CAOS
-		#	if is_on_wall() or !$RayCast2D.is_colliding(): 
-		# QUE TOT VAGI EN FUNCIÓ DE DIRECTION! i canviar la direction només quan interessi, no aqui
-		#		change_direction()
-		
-		if not is_attacking and not is_being_hit and not is_alarmed:
-			player_position = get_tree().get_nodes_in_group("player")[0].global_position
-			player_state = get_tree().get_nodes_in_group("player")[0].state
+	motion.y += G
+	if not is_dead:	
+		$HPBar.value = hp * 100 / max_hp
+		if not is_attacking and not is_being_hit:
 			
-			# L'estat de l'enemic canvia només aquí (on posteriorment hi haurà la IA que decidirà).
-			# Per això, només cal que el nivell afecti aquí.
-			match player_state: ################################################ TEMP: CANVIA DIRECTAMENT QUAN HO FA EL JUGADOR
-				"Melee":
-					if state != "Ranged":
-						state = "Ranged"
-						is_positioned = false
-				"Ranged":
-					if state != "Magic":
-						state = "Magic"
-						is_positioned = false
-				"Magic":
-					state = "Melee"
+			##### CANVI D'ESTAT SEGONS LA VIDA
+			#if hp > 20 * max_hp / 100:
 			
-			x_dist = player_position.x - global_position.x
-
-			match state:
-				"Melee":
-					is_positioned = false
-					########### MOVEMENT
-					if x_dist > 0: # Positiu -> player a la dreta de l'enemic
-						if direction == -1:
-							change_direction()
+			if hp > starting_hp * 2/3:
+				$HPBar.modulate = "#31a124"
+				# El canvi a mode Jump es fa automàticament
+			elif hp > starting_hp * 1/3:
+				$HPBar.modulate = "#f39b2b"
+				state = "Minions"
+			elif state != "Lightning": # i hp < 1/3 de starting
+				$HPBar.modulate = "#b00000"
+				state = "Lightning"
+				can_zap_spawn = true
+			
+			if OS.is_debug_build():
+				if Input.is_action_just_pressed("debug_right"):
+					""" 
+					match state:
+						"Wait": state = "Jump"
+						"Jump": state = "Minions"
+						"Minions": 
+							state = "Lightning"
+							can_zap_spawn = true
+						"Lightning": state = "Wait"
+					"""
+					if hp > starting_hp * 2/3:
+						hp = starting_hp
+					elif hp > starting_hp * 1/3:
+						hp = starting_hp * 2/3 + 1
+						state = "Jump"
 					else:
+						hp = starting_hp * 1/3 + 1
+				
+				if Input.is_action_just_pressed("debug_left"):
+					if hp < starting_hp * 1/3:
+						hp = 0
+					elif hp < starting_hp * 2/3:
+						hp = starting_hp * 1/3 - 1
+					else:
+						hp = starting_hp * 2/3 - 1
+				
+			if Global.lightning_target != null and state != "Lightning":
+				Global.lightning_target.queue_free()
+				Global.lightning_target = null
+			
+			if Global.lightning != null and state != "Lightning":
+				Global.lightning.queue_free()
+				Global.lightning = null
+			
+			player_position = player.global_position
+			x_dist = player_position.x - global_position.x
+			
+			match state:
+				"Jump":
+					
+					is_positioned = false
+					
+					if x_dist < 0:
+						#direction = -1
 						if direction == 1:
 							change_direction()
-					
-					if direction == 1:
-						motion.x = min(motion.x + ACC, MAX_SPEED)
 					else:
-						motion.x = max(motion.x - ACC, -MAX_SPEED) 
+						#direction = 1
+						if direction == -1:
+							change_direction()
+						
 					
-					if is_on_wall() or (!$RayCast2D.is_colliding() and is_on_floor()):
-						motion = Vector2(0,0)
-						$AnimatedSprite.play("idle")
+					#if Input.is_action_pressed("debug_up"):
+					if jump_order:
+						jump_order = false
+						is_jumping = true
+						motion = Vector2(x_dist*0.75, -400)
+						$AnimatedSprite.play("jump")
+					
+					var can_do_damage = false
+					if is_jumping and motion.y >= 0: # Si està a l'aire i movent-se cap avall
+						$AnimatedSprite.play("fall")
+						can_do_damage = true
+					
+					if get_slide_count() > 0 and can_do_damage:
+						for i in range(get_slide_count()):
+							var collision = get_slide_collision(i)
+							if "Player" in collision.collider.name and can_do_damage:
+								player_position = get_tree().get_nodes_in_group("player")[0].global_position
+								x_dist = player_position.x - global_position.x
+								var direction = -1
+								if x_dist > 0:
+									direction = 1 
+								get_slide_collision(i).collider.hit(JUMP_DMG, "Jump", direction)
+								is_jumping = false
+								can_do_damage = false
+								motion = motion.bounce(collision.normal)
+								#motion.y *= 3
+					
+					
+					#if is_on_floor() and not is_floor_player:
+					if $RayCast2D.is_colliding():
+						#print($RayCast2D.get_collider().name)
+						if not is_jumping:
+							motion.x = 0
+							$AnimatedSprite.play("idle")
+						if motion.y > 0:
+							is_jumping = false
+						if not jump_timer:
+							$JumpTimer.start()
+							jump_timer = true
+				
+				"Minions":
+					
+					is_positioned = false
+					
+					############################################# MOVEMENT #####
+					if $WallRaycast.is_colliding() and $RayCast2D.is_colliding() and not must_move:
+						if $WallRaycast.get_collider().name == "TileMap":
+							motion = Vector2(0,0)
+							
+							if not is_attacking:
+								$AnimatedSprite.play("idle")
+							
+							if x_dist >= 0 and prev_dist <= 0 or x_dist <= 0 and prev_dist >= 0:
+								must_move = true
+							
+							prev_dist = x_dist
 					else:
+						must_move = false
 						$AnimatedSprite.play("walk")
 					
-					########### ATTACK
-					if not is_shield_active and $MeleeRayCast.is_colliding():
+						if x_dist > 0: # Positiu -> player a la dreta de l'enemic
+							if direction == -1:
+								change_direction()
+						else:
+							if direction == 1:
+								change_direction()
+						
+						if direction == 1:  # Es mou en direcció contrària a direction (camina endarrere)
+							motion.x = max(motion.x - ACC, -MAX_SPEED)
+						else:
+							motion.x = min(motion.x + ACC, MAX_SPEED) 
+					
+					############################################# ATTACK #######
+					if minion_order:
+						minion_order = false
+						is_attacking = true
+						is_launching = true
+						$AnimatedSprite.play("launch")
+						# El llançament en si es fa a _on_animation_finished()
+					
+					if $MeleeRayCast.is_colliding():
 						MeleeObjective = $MeleeRayCast.get_collider()
 						if MeleeObjective in get_tree().get_nodes_in_group("player") and (sta - MELEE_STA >= 0):
 							$StaRegen.start()
@@ -158,74 +278,39 @@ func _physics_process(delta):
 							$AnimatedSprite.play("attack")
 							#motion = Vector2(0,0)
 							motion.x = 0
-							MeleeObjective.hit(MELEE_DMG,"Melee",direction)
-				"Ranged":
-					########### MOVEMENT (de moment, que vagi a full cap a la dreta, parlar amb el Jorge)
-					if not is_positioned:
-						var prev_dir = direction
-						if direction == -1:
-							change_direction()
-						
-						# Sí o sí direction serà 1 (dreta)
-						motion.x = min(motion.x + ACC, MAX_SPEED)
-						$AnimatedSprite.play("walk")
-						
-						if prev_dir == 1:
-							if is_on_wall() or (!$RayCast2D.is_colliding() and is_on_floor()):
-								motion = Vector2(0,0)
-								is_positioned = true
-						
-					else: # Si ja està a posició, rotar en funció del player
-						if x_dist > 0: # Positiu -> player a la dreta de l'enemic
-							if direction == -1:
-								change_direction()
-						else:
-							if direction == 1:
-								change_direction()
-								
-						$AnimatedSprite.play("idle")
-					
-					
-					########### ATTACK
-					if not is_shield_active and $RangedRayCast.is_colliding():
-						var RangedObjective = $RangedRayCast.get_collider()
-						if RangedObjective in get_tree().get_nodes_in_group("player") and (sta - RANGED_STA >= 0):
-							$StaRegen.start()
-							sta -= RANGED_STA
-							is_attacking = true
-							$AnimatedSprite.play("shoot")
-							#motion = Vector2(0,0)
-							motion.x = 0
-							
-							var arrow = ARROW.instance() # Creació de l'objecte
-							
-							arrow.launcher = "enemy"
-							
-							if sign($Position2D.position.x) == 1:
-								arrow.set_arrow_direction(1)
-							else:
-								arrow.set_arrow_direction(-1)
+							MeleeObjective.hit(MELEE_DMG,"Melee",direction,true) # true <= from_boss
 
-							get_parent().add_child(arrow)
-							
-							arrow.position = $Position2D.global_position
-				"Magic":
-					########### MOVEMENT (de moment, va a full cap a la dreta)
+				"Lightning":
+					############################################# MOVEMENT #####
 					if not is_positioned:
 						var prev_dir = direction
-						if direction == -1:
+						if direction == 1:
 							change_direction()
 						
-						# Sí o sí direction serà 1 (dreta)
-						motion.x = min(motion.x + ACC, MAX_SPEED)
+						# Sí o sí direction serà -1 (esquerra)
+						motion.x = max(motion.x - ACC, -MAX_SPEED)
 						$AnimatedSprite.play("walk")
 						
-						if prev_dir == 1:
-							if is_on_wall() or (!$RayCast2D.is_colliding() and is_on_floor()):
-								motion = Vector2(0,0)
-								is_positioned = true
-						
+						if prev_dir == -1:
+							if $FrontWallRaycast.is_colliding() and $RayCast2D.is_colliding():
+								#if !($FrontWallRaycast.get_collider() in get_tree().get_nodes_in_group("player")):
+								if $FrontWallRaycast.get_collider().name == "TileMap":
+									motion = Vector2(0,0)
+									is_positioned = true
+							
 					else: # Si ja està a posició, rotar en funció del player
+						if can_zap_spawn:
+							can_zap_spawn = false
+							# Global.boss_room_limits = [room_left, room_right, room_up, room_down]
+							var target = TARGET.instance() # Creació de l'objecte
+							target.y_position = Global.boss_room_limits[3] # room_down
+							get_parent().add_child(target)
+							var lightning = LIGHTNING.instance()
+							var aux_node = Node2D.new()
+							aux_node.add_child(lightning)
+							get_parent().add_child(aux_node)
+							aux_node.position = Vector2(Global.boss_room_limits[0], Global.boss_room_limits[2] + 64) #left,up
+							Global.lightning = lightning
 						
 						if x_dist > 0: # Positiu -> player a la dreta de l'enemic
 							if direction == -1:
@@ -234,89 +319,49 @@ func _physics_process(delta):
 							if direction == 1:
 								change_direction()
 								
-						$AnimatedSprite.play("idle")
-			
-					########### ATTACK
-					if not is_shield_active and $MagicRayCast.is_colliding():
-						var MagicObjective = $MagicRayCast.get_collider()
-						if MagicObjective in get_tree().get_nodes_in_group("player") and (sta - MAGIC_STA >= 0):
-							$StaRegen.start()
-							sta -= MAGIC_STA
-							
-							is_attacking = true
-							$AnimatedSprite.play("shoot")
-							#motion = Vector2(0,0)
-							motion.x = 0
-							
-							var fireball = FIREBALL.instance() # Creació de l'objecte! (com new de C)
-							
-							fireball.launcher = "enemy"
-							
-							if sign($Position2D.position.x) == 1:
-								fireball.set_fireball_direction(1)
-							else:
-								fireball.set_fireball_direction(-1)
-
-							get_parent().add_child(fireball)
-							
-							fireball.position = $Position2D.global_position
-			
+						$AnimatedSprite.play("lightning")
+					
+					############################################# ATTACK #######
+					if $MeleeRayCast.is_colliding():
+						MeleeObjective = $MeleeRayCast.get_collider()
+						if MeleeObjective.is_in_group("player") or MeleeObjective.is_in_group("minions"):
+							if (sta - MELEE_STA >= 0):
+								$StaRegen.start()
+								sta -= MELEE_STA
+								is_attacking = true
+								$AnimatedSprite.play("attack")
+								#motion = Vector2(0,0)
+								motion.x = 0
+								if MeleeObjective.is_in_group("player"):
+									MeleeObjective.hit(MELEE_DMG,"Melee",direction,true) # true <= from_boss
+								else:
+									MeleeObjective.hit(MELEE_DMG,"Melee",direction)
+					
 			if direction == 1:
 				$AnimatedSprite.flip_h = false
 			else:
 				$AnimatedSprite.flip_h = true 
-		
-		# OJUT que està fora del check de is_being hit
-		if is_positioned and !is_on_floor() and !is_about_to_fall: # Si marca com posicionat però no toca el terra
-			is_about_to_fall = true
-		
-		if is_about_to_fall:
-			motion.x = max(motion.x - ACC, -MAX_SPEED*0.5) # Intentar salvar-se anant a l'esquerra
-		
-		if is_on_floor() and is_about_to_fall:
-			is_about_to_fall = false
-			is_positioned = false
-		
-		motion.y += G
 		#if is_being_hit or is_idle:
-		if is_idle or is_alarmed:
+		if is_idle:
 			motion = Vector2(0,0)
-		motion = move_and_slide(motion, UP)
-		if get_slide_count() > 0:
-			for i in range(get_slide_count()):
-				if get_slide_collision(i).collider in get_tree().get_nodes_in_group("instakill") and not is_dead:
-					hit(1000, "Melee", 1)
+	else: # if dead
+		if Global.lightning_target != null:
+			Global.lightning_target.queue_free()
+			Global.lightning_target = null
+		if Global.lightning != null:
+			Global.lightning.queue_free()
+			Global.lightning = null
 		
+		if motion.x > 0:
+			motion.x -= 2
+		elif motion.x < 0:
+			motion.x += 2	
+	
+	motion = move_and_slide(motion, UP)
+	
 	$StateLabel.text = state
-	$Label2.text = str(sta)
-	#print($AnimatedSprite.get_animation())
-	#print(is_attacking)
-	
-	############################### COLLISION DAMAGE ###########################
-	#if get_slide_count() > 0:
-	#		for i in range(get_slide_count()):
-	#			if "Player" in get_slide_collision(i).collider.name:
-	#				#get_slide_collision(i).collider.die()
-	#				get_slide_collision(i).collider.hit(DMG)
-	############################################################################
-	
-	########### PATROL MOVEMENT ################################################
-#	if is_idle:
-#		$AnimatedSprite.play("idle")
-#	elif not is_being_hit:
-#
-#		if is_on_wall() or !$RayCast2D.is_colliding():
-#			change_direction()
-#
-#		if direction == 1:
-#			motion.x = min(motion.x + ACC, MAX_SPEED)
-#		else:
-#			motion.x = max(motion.x - ACC, -MAX_SPEED) 
-#
-#		$AnimatedSprite.play("walk")
-	############################################################################
+	#$Label2.text = str(sta)
 
-# TODO: on_animation_finished: state = "Walking"
 
 
 func change_direction():
@@ -324,46 +369,54 @@ func change_direction():
 	$RayCast2D.position.x *= -1
 	$MeleeRayCast.cast_to.x *= -1
 	$Position2D.position.x *= -1
-	$RangedRayCast.cast_to.x *= -1
-	$RangedRayCast.position.x *= -1
-	$MagicRayCast.cast_to.x *= -1
-	$MagicRayCast.position.x *= -1
+	$WallRaycast.cast_to.x *= -1
+	$MinionSpawn.position.x *= -1
+	$FrontWallRaycast.cast_to.x *= -1
+
 
 func _on_Despawn_timeout():
-	queue_free()
+	#queue_free()
+	# FI DEL JOC -> ANIMACIÓ, RANKING, ESBORRAR PARTIDA, SORTIR AL MENU
+	Global.final_souls = player.souls
+	Global.final_time = player.time
+	get_tree().change_scene("res://WinScreen.tscn")
+	
 
 
 func _on_animation_finished():
+	if state == "Minions" and is_attacking and is_launching:
+		var minion = MINION.instance() # Creació de l'objecte
+						
+		if sign($Position2D.position.x) == 1:
+			minion.direction = 1
+		else:
+			minion.direction = -1
+
+		get_parent().add_child(minion)
+		
+		minion.position = $MinionSpawn.global_position
+		minion.motion = Vector2(x_dist * 0.75, -200)
+	
 	is_attacking = false
 	is_being_hit = false
-	is_alarmed = false
-
+	is_launching = false
+	
+	
 
 func _on_StaRegen_timeout():
 	if sta + 1 <= max_sta: # Ojut el hardcode
 		sta = sta + 1
+	
+	# Mesura guarra per evitar que es quedi penjat
+	if is_being_hit:
+		is_being_hit = false
+	
+func _on_JumpTimer_timeout():
+	if is_on_floor():
+		jump_order = true
+	jump_timer = false
 
 
-func _on_Shield_area_entered(area):
-	if area.is_in_group("projectile"):
-		area.queue_free()
-
-
-func _on_ShieldTimer_timeout():
-	is_shield_active = false
-	$Shield.visible = false
-	#$Shield/CollisionShape2D.disabled = true
-	$Shield/CollisionShape2D.set_deferred("disabled",true)
-
-
-func _on_VisionCone_area_entered(area):
-	if not is_dead and area.is_in_group("projectile") and not is_shield_active:
-		if area.launcher == "player":
-			if (sta - SHIELD_STA >= 0):
-				$StaRegen.start()
-				sta -= SHIELD_STA
-				is_shield_active = true
-				$Shield/Timer.start()
-				$Shield.visible = true
-				#$Shield/CollisionShape2D.disabled = true
-				$Shield/CollisionShape2D.set_deferred("disabled",true)
+func _on_MinionTimer_timeout():
+	if len(get_tree().get_nodes_in_group("minions")) < MAX_MINIONS:
+		minion_order = true

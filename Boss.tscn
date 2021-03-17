@@ -1,4 +1,4 @@
-[gd_scene load_steps=30 format=2]
+[gd_scene load_steps=27 format=2]
 
 [ext_resource path="res://Sprites/bearsum/hit1-upgraded.png" type="Texture" id=1]
 [ext_resource path="res://Sprites/bearsum/hit3-upgraded.png" type="Texture" id=2]
@@ -18,13 +18,12 @@
 [ext_resource path="res://Sprites/bearsum/roll2-upgraded.png" type="Texture" id=16]
 [ext_resource path="res://Sprites/bearsum/roll1-upgraded.png" type="Texture" id=17]
 [ext_resource path="res://Sprites/bearsum/alert1.png" type="Texture" id=18]
-[ext_resource path="res://Sprites/bubble/bubble2.png" type="Texture" id=20]
-[ext_resource path="res://Sprites/bubble/bubble4.png" type="Texture" id=21]
-[ext_resource path="res://Sprites/bubble/bubble5.png" type="Texture" id=22]
-[ext_resource path="res://Sprites/bubble/bubble1.png" type="Texture" id=23]
-[ext_resource path="res://Sprites/bubble/bubble3.png" type="Texture" id=24]
-[ext_resource path="res://Sprites/bubble/bubble6.png" type="Texture" id=26]
-[ext_resource path="res://Sprites/bubble/bubble8.png" type="Texture" id=27]
+[ext_resource path="res://Sprites/bearsum/smash-up2-upgraded.png" type="Texture" id=19]
+[ext_resource path="res://Sprites/bearsum/jump2-upgraded.png" type="Texture" id=20]
+[ext_resource path="res://Sprites/bearsum/jump3-upgraded.png" type="Texture" id=21]
+[ext_resource path="res://Sprites/bearsum/lightning2-upgraded.png" type="Texture" id=22]
+[ext_resource path="res://Sprites/bearsum/lightning1-upgraded.png" type="Texture" id=23]
+[ext_resource path="res://Sprites/bearsum/lightning3-upgraded.png" type="Texture" id=24]
 
 [sub_resource type="SpriteFrames" id=1]
 animations = [ {
@@ -38,56 +37,70 @@ animations = [ {
 "name": "alert",
 "speed": 5.0
 }, {
-"frames": [ ExtResource( 16 ) ],
-"loop": true,
-"name": "dead",
+"frames": [ ExtResource( 17 ) ],
+"loop": false,
+"name": "fall",
 "speed": 5.0
+}, {
+"frames": [ ExtResource( 21 ), ExtResource( 20 ) ],
+"loop": false,
+"name": "jump",
+"speed": 10.0
+}, {
+"frames": [ ExtResource( 13 ), ExtResource( 9 ), ExtResource( 6 ), ExtResource( 19 ) ],
+"loop": true,
+"name": "launch",
+"speed": 10.0
+}, {
+"frames": [ ExtResource( 22 ), ExtResource( 23 ), ExtResource( 24 ) ],
+"loop": true,
+"name": "lightning",
+"speed": 7.0
 }, {
 "frames": [ ExtResource( 13 ), ExtResource( 9 ), ExtResource( 6 ) ],
 "loop": false,
 "name": "shoot",
 "speed": 10.0
 }, {
-"frames": [ ExtResource( 4 ), ExtResource( 11 ), ExtResource( 10 ), ExtResource( 12 ) ],
-"loop": true,
-"name": "walk",
-"speed": 8.0
+"frames": [ ExtResource( 17 ) ],
+"loop": false,
+"name": "hit",
+"speed": 5.0
 }, {
 "frames": [ ExtResource( 1 ), ExtResource( 3 ), ExtResource( 2 ) ],
 "loop": false,
 "name": "attack",
 "speed": 10.0
 }, {
-"frames": [ ExtResource( 17 ) ],
-"loop": false,
-"name": "hit",
+"frames": [ ExtResource( 16 ) ],
+"loop": true,
+"name": "dead",
 "speed": 5.0
+}, {
+"frames": [ ExtResource( 4 ), ExtResource( 11 ), ExtResource( 10 ), ExtResource( 12 ) ],
+"loop": true,
+"name": "walk",
+"speed": 8.0
 } ]
 
 [sub_resource type="CapsuleShape2D" id=2]
 radius = 18.3154
 height = 23.9985
 
-[sub_resource type="SpriteFrames" id=3]
-animations = [ {
-"frames": [ ExtResource( 23 ), ExtResource( 20 ), ExtResource( 24 ), ExtResource( 21 ), ExtResource( 22 ), ExtResource( 26 ), ExtResource( 27 ) ],
-"loop": true,
-"name": "default",
-"speed": 12.0
-} ]
-
-[sub_resource type="CircleShape2D" id=4]
-radius = 35.0
-
 [node name="Boss" type="KinematicBody2D" groups=[
+"boss",
 "enemies",
 ]]
 scale = Vector2( 2, 2 )
 script = ExtResource( 5 )
-max_hp = 24
+__meta__ = {
+"_edit_horizontal_guides_": [ 60.6092 ]
+}
+direction = -1
+max_hp = 30
 
 [node name="HPBar" type="TextureProgress" parent="."]
-modulate = Color( 1, 0, 0, 1 )
+modulate = Color( 0.192157, 0.631373, 0.141176, 1 )
 margin_left = -39.6421
 margin_top = -40.6222
 margin_right = 356.358
@@ -114,56 +127,31 @@ __meta__ = {
 [node name="AnimatedSprite" type="AnimatedSprite" parent="."]
 position = Vector2( -0.0196867, 0 )
 frames = SubResource( 1 )
-animation = "walk"
-frame = 3
+animation = "idle"
+frame = 1
 playing = true
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="."]
 position = Vector2( -0.629435, 0.25587 )
 shape = SubResource( 2 )
 
-[node name="RayCast2D" type="RayCast2D" parent="."]
-position = Vector2( 18.131, 0 )
-enabled = true
-cast_to = Vector2( 0, 32 )
-
-[node name="BodyRayCast" type="RayCast2D" parent="."]
-enabled = true
-cast_to = Vector2( 0, 32 )
-
 [node name="DespawnTimer" type="Timer" parent="."]
 wait_time = 2.0
 one_shot = true
 
 [node name="MeleeRayCast" type="RayCast2D" parent="."]
-position = Vector2( 0, 1.935 )
+position = Vector2( 0, 6.935 )
 enabled = true
 cast_to = Vector2( 45, 0 )
 
 [node name="Position2D" type="Position2D" parent="."]
 position = Vector2( 45.3652, 3.5946 )
 
-[node name="RangedRayCast" type="RayCast2D" parent="."]
-position = Vector2( 45.1807, -20.8156 )
-enabled = true
-cast_to = Vector2( 200, 0 )
-
-[node name="MagicRayCast" type="RayCast2D" parent="."]
-position = Vector2( 45.1807, -20.8156 )
-enabled = true
-cast_to = Vector2( 1000, 0 )
-
-[node name="VisionCone" type="Area2D" parent="."]
-
-[node name="CollisionPolygon2D" type="CollisionPolygon2D" parent="VisionCone"]
-position = Vector2( 11.3288, 0 )
-scale = Vector2( 1.14456, 1 )
-polygon = PoolVector2Array( 6.34189, -14.9273, 297.649, -127.939, 297.643, 98.6181, 6.807, 18.019 )
-
 [node name="StaRegen" type="Timer" parent="."]
 autostart = true
 
 [node name="Label2" type="Label" parent="."]
+visible = false
 margin_left = 20.306
 margin_top = -52.5498
 margin_right = 37.306
@@ -175,29 +163,29 @@ __meta__ = {
 "_edit_use_anchors_": false
 }
 
-[node name="Shield" type="Area2D" parent="."]
-visible = false
-position = Vector2( -2, 0 )
-
-[node name="AnimatedSprite" type="AnimatedSprite" parent="Shield"]
-position = Vector2( 0.0947495, 0.260308 )
-scale = Vector2( 0.095, 0.095 )
-frames = SubResource( 3 )
-frame = 6
-playing = true
-
-[node name="CollisionShape2D" type="CollisionShape2D" parent="Shield"]
-position = Vector2( -0.297638, 0.0992088 )
-shape = SubResource( 4 )
-disabled = true
-
-[node name="Timer" type="Timer" parent="Shield"]
-wait_time = 3.0
+[node name="JumpTimer" type="Timer" parent="."]
 one_shot = true
+
+[node name="RayCast2D" type="RayCast2D" parent="."]
+enabled = true
+cast_to = Vector2( 0, 32 )
+
+[node name="WallRaycast" type="RayCast2D" parent="."]
+enabled = true
+cast_to = Vector2( -20, 0 )
+
+[node name="FrontWallRaycast" type="RayCast2D" parent="."]
+enabled = true
+cast_to = Vector2( 20, 0 )
+
+[node name="MinionTimer" type="Timer" parent="."]
+wait_time = 3.0
+autostart = true
+
+[node name="MinionSpawn" type="Position2D" parent="."]
+position = Vector2( 36, -21 )
 [connection signal="animation_finished" from="AnimatedSprite" to="." method="_on_animation_finished"]
 [connection signal="timeout" from="DespawnTimer" to="." method="_on_Despawn_timeout"]
-[connection signal="area_entered" from="VisionCone" to="." method="_on_VisionCone_area_entered"]
-[connection signal="body_entered" from="VisionCone" to="." method="_on_VisionCone_body_entered"]
 [connection signal="timeout" from="StaRegen" to="." method="_on_StaRegen_timeout"]
-[connection signal="area_entered" from="Shield" to="." method="_on_Shield_area_entered"]
-[connection signal="timeout" from="Shield/Timer" to="." method="_on_ShieldTimer_timeout"]
+[connection signal="timeout" from="JumpTimer" to="." method="_on_JumpTimer_timeout"]
+[connection signal="timeout" from="MinionTimer" to="." method="_on_MinionTimer_timeout"]

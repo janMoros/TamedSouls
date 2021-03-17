@@ -1,4 +1,4 @@
-[gd_scene load_steps=17 format=2]
+[gd_scene load_steps=19 format=2]
 
 [ext_resource path="res://Sprites/Campfire/fire6.png" type="Texture" id=1]
 [ext_resource path="res://Sprites/Campfire/fire7.png" type="Texture" id=2]
@@ -13,6 +13,8 @@
 [ext_resource path="res://Sprites/Campfire/fire5.png" type="Texture" id=11]
 [ext_resource path="res://Campfire.gd" type="Script" id=12]
 [ext_resource path="res://Comfortaa-Bold.ttf" type="DynamicFontData" id=13]
+[ext_resource path="res://Sprites/GUI/B.png" type="Texture" id=14]
+[ext_resource path="res://Sprites/GUI/B_key.png" type="Texture" id=15]
 
 [sub_resource type="SpriteFrames" id=1]
 animations = [ {
@@ -33,12 +35,15 @@ font_data = ExtResource( 13 )
 
 [node name="Campfire" type="Area2D"]
 script = ExtResource( 12 )
+__meta__ = {
+"_edit_vertical_guides_": [ -125.75 ]
+}
 
 [node name="AnimatedSprite" type="AnimatedSprite" parent="."]
 position = Vector2( 0.127693, 8.0703 )
 scale = Vector2( 0.1, 0.1 )
 frames = SubResource( 1 )
-frame = 6
+frame = 10
 playing = true
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="."]
@@ -50,11 +55,11 @@ visible = false
 anchor_left = 0.5
 anchor_right = 0.5
 margin_left = -158.0
-margin_top = -86.7288
+margin_top = -86.9648
 margin_right = 157.0
-margin_bottom = -63.7288
+margin_bottom = -63.9648
 custom_fonts/font = SubResource( 3 )
-text = "(B) per curar 10hp [50 ànimes]"
+text = " .  per curar 10hp [50 ànimes]"
 align = 1
 valign = 1
 autowrap = true
@@ -88,6 +93,17 @@ __meta__ = {
 "_edit_use_anchors_": false
 }
 
+[node name="B" type="Sprite" parent="hp"]
+position = Vector2( 14.2528, 12.363 )
+scale = Vector2( 1.91119, 1.91119 )
+texture = ExtResource( 14 )
+
+[node name="B_key" type="Sprite" parent="hp"]
+visible = false
+position = Vector2( 12.38, 14.2359 )
+scale = Vector2( 1.675, 1.675 )
+texture = ExtResource( 15 )
+
 [node name="respawn" type="Label" parent="."]
 visible = false
 anchor_left = 0.5
@@ -97,7 +113,7 @@ margin_top = -99.8348
 margin_right = 153.3
 margin_bottom = -50.8348
 custom_fonts/font = SubResource( 3 )
-text = "(B) per establir punt de guardat [500 ànimes]"
+text = " .   per establir punt de guardat [500 ànimes]"
 align = 1
 valign = 1
 autowrap = true
@@ -131,6 +147,17 @@ __meta__ = {
 "_edit_use_anchors_": false
 }
 
+[node name="B" type="Sprite" parent="respawn"]
+position = Vector2( 47.5388, 12.4565 )
+scale = Vector2( 1.91119, 1.91119 )
+texture = ExtResource( 14 )
+
+[node name="B_key" type="Sprite" parent="respawn"]
+visible = false
+position = Vector2( 47.5004, 12.5203 )
+scale = Vector2( 1.67469, 1.67469 )
+texture = ExtResource( 15 )
+
 [node name="estus" type="Label" parent="."]
 visible = false
 anchor_left = 0.5
@@ -140,7 +167,7 @@ margin_top = -99.8348
 margin_right = 153.3
 margin_bottom = -50.8348
 custom_fonts/font = SubResource( 3 )
-text = "(B) per reomplir el càntir d'estus [300 ànimes]"
+text = " .   per reomplir el càntir d'estus [300 ànimes]"
 align = 1
 valign = 1
 autowrap = true
@@ -172,5 +199,16 @@ text = "^"
 __meta__ = {
 "_edit_use_anchors_": false
 }
+
+[node name="B" type="Sprite" parent="estus"]
+position = Vector2( 39.3919, 12.5283 )
+scale = Vector2( 1.91119, 1.91119 )
+texture = ExtResource( 14 )
+
+[node name="B_key" type="Sprite" parent="estus"]
+visible = false
+position = Vector2( 39.2606, 12.4608 )
+scale = Vector2( 1.67469, 1.67469 )
+texture = ExtResource( 15 )
 [connection signal="body_entered" from="." to="." method="_on_Campfire_body_entered"]
 [connection signal="body_exited" from="." to="." method="_on_Campfire_body_exited"]

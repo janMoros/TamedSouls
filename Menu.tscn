@@ -1,0 +1,177 @@
+[gd_scene load_steps=7 format=2]
+
+[ext_resource path="res://Comfortaa-Bold.ttf" type="DynamicFontData" id=1]
+[ext_resource path="res://Menu.gd" type="Script" id=2]
+[ext_resource path="res://button_font.tres" type="DynamicFont" id=3]
+[ext_resource path="res://theme_noBorderFocus.tres" type="Theme" id=4]
+
+[sub_resource type="DynamicFont" id=1]
+size = 60
+outline_size = 5
+outline_color = Color( 0, 0, 0, 1 )
+font_data = ExtResource( 1 )
+
+[sub_resource type="Animation" id=2]
+resource_name = "fade_in"
+length = 0.6
+tracks/0/type = "value"
+tracks/0/path = NodePath(".:color")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/keys = {
+"times": PoolRealArray( 0, 0.5 ),
+"transitions": PoolRealArray( 1, 1 ),
+"update": 0,
+"values": [ Color( 0, 0, 0, 0 ), Color( 0, 0, 0, 1 ) ]
+}
+
+[node name="Menu" type="Node"]
+script = ExtResource( 2 )
+world_scene = "res://World.tscn"
+new_world_menu = "res://NewGameMenu.tscn"
+ranking_scene = "res://Ranking.tscn"
+
+[node name="Node" type="MarginContainer" parent="."]
+anchor_right = 1.0
+anchor_bottom = 1.0
+margin_left = 100.0
+margin_top = 60.0
+margin_right = -100.0
+__meta__ = {
+"_edit_use_anchors_": false
+}
+
+[node name="HSplit" type="VBoxContainer" parent="Node"]
+margin_right = 824.0
+margin_bottom = 540.0
+
+[node name="Title" type="Label" parent="Node/HSplit"]
+margin_right = 824.0
+margin_bottom = 68.0
+custom_fonts/font = SubResource( 1 )
+custom_colors/font_color = Color( 0.709804, 0.027451, 0.027451, 1 )
+text = "TAMED SOULS"
+align = 1
+
+[node name="CenterRow" type="HBoxContainer" parent="Node/HSplit"]
+margin_top = 72.0
+margin_right = 824.0
+margin_bottom = 540.0
+size_flags_vertical = 3
+alignment = 1
+
+[node name="Buttons" type="VBoxContainer" parent="Node/HSplit/CenterRow"]
+margin_left = 274.0
+margin_right = 549.0
+margin_bottom = 468.0
+rect_min_size = Vector2( 275, 0 )
+size_flags_vertical = 3
+custom_constants/separation = 30
+alignment = 1
+
+[node name="NewGame" type="Button" parent="Node/HSplit/CenterRow/Buttons"]
+margin_top = 97.0
+margin_right = 275.0
+margin_bottom = 143.0
+rect_min_size = Vector2( 250, 35 )
+theme = ExtResource( 4 )
+custom_fonts/font = ExtResource( 3 )
+custom_colors/font_color_disabled = Color( 0.713726, 0.698039, 0.666667, 1 )
+custom_colors/font_color = Color( 0.854902, 0.65098, 0.117647, 1 )
+custom_colors/font_color_hover = Color( 1, 0.866667, 0, 1 )
+custom_colors/font_color_pressed = Color( 1, 1, 1, 1 )
+text = "Nova Partida"
+flat = true
+
+[node name="Continue" type="Button" parent="Node/HSplit/CenterRow/Buttons"]
+margin_top = 173.0
+margin_right = 275.0
+margin_bottom = 219.0
+rect_min_size = Vector2( 205, 35 )
+theme = ExtResource( 4 )
+custom_fonts/font = ExtResource( 3 )
+custom_colors/font_color_disabled = Color( 0.713726, 0.698039, 0.666667, 1 )
+custom_colors/font_color = Color( 0.854902, 0.65098, 0.117647, 1 )
+custom_colors/font_color_hover = Color( 1, 0.866667, 0, 1 )
+custom_colors/font_color_pressed = Color( 1, 1, 1, 1 )
+text = "Continuar"
+flat = true
+
+[node name="Controls" type="Button" parent="Node/HSplit/CenterRow/Buttons"]
+visible = false
+margin_top = 160.0
+margin_right = 393.0
+margin_bottom = 206.0
+rect_min_size = Vector2( 175, 35 )
+theme = ExtResource( 4 )
+custom_fonts/font = ExtResource( 3 )
+custom_colors/font_color_disabled = Color( 0.713726, 0.698039, 0.666667, 1 )
+custom_colors/font_color = Color( 0.854902, 0.65098, 0.117647, 1 )
+custom_colors/font_color_hover = Color( 1, 0.866667, 0, 1 )
+custom_colors/font_color_pressed = Color( 1, 1, 1, 1 )
+disabled = true
+text = "Controls"
+flat = true
+
+[node name="Ranking" type="Button" parent="Node/HSplit/CenterRow/Buttons"]
+margin_top = 249.0
+margin_right = 275.0
+margin_bottom = 295.0
+rect_min_size = Vector2( 163, 35 )
+theme = ExtResource( 4 )
+custom_fonts/font = ExtResource( 3 )
+custom_colors/font_color_disabled = Color( 0.713726, 0.698039, 0.666667, 1 )
+custom_colors/font_color = Color( 0.854902, 0.65098, 0.117647, 1 )
+custom_colors/font_color_hover = Color( 1, 0.866667, 0, 1 )
+custom_colors/font_color_pressed = Color( 1, 1, 1, 1 )
+text = "Rànking"
+flat = true
+
+[node name="Exit" type="Button" parent="Node/HSplit/CenterRow/Buttons"]
+margin_top = 325.0
+margin_right = 275.0
+margin_bottom = 371.0
+rect_min_size = Vector2( 122, 35 )
+theme = ExtResource( 4 )
+custom_fonts/font = ExtResource( 3 )
+custom_colors/font_color_disabled = Color( 0.713726, 0.698039, 0.666667, 1 )
+custom_colors/font_color = Color( 0.854902, 0.65098, 0.117647, 1 )
+custom_colors/font_color_hover = Color( 1, 0.866667, 0, 1 )
+custom_colors/font_color_pressed = Color( 1, 1, 1, 1 )
+text = "Sortir"
+flat = true
+
+[node name="Boss" type="Button" parent="Node/HSplit/CenterRow/Buttons"]
+visible = false
+margin_top = 363.0
+margin_right = 275.0
+margin_bottom = 409.0
+rect_min_size = Vector2( 175, 35 )
+theme = ExtResource( 4 )
+custom_fonts/font = ExtResource( 3 )
+custom_colors/font_color_disabled = Color( 0.713726, 0.698039, 0.666667, 1 )
+custom_colors/font_color = Color( 0.854902, 0.117647, 0.447059, 1 )
+custom_colors/font_color_hover = Color( 0.517647, 0.0980392, 0.513726, 1 )
+custom_colors/font_color_pressed = Color( 1, 1, 1, 1 )
+text = "Testing: Boss"
+flat = true
+
+[node name="FadeIn" type="ColorRect" parent="."]
+visible = false
+anchor_right = 1.0
+anchor_bottom = 1.0
+color = Color( 0, 0, 0, 0 )
+__meta__ = {
+"_edit_use_anchors_": false
+}
+
+[node name="AnimationPlayer" type="AnimationPlayer" parent="FadeIn"]
+anims/fade_in = SubResource( 2 )
+[connection signal="pressed" from="Node/HSplit/CenterRow/Buttons/NewGame" to="." method="_on_NewGame_pressed"]
+[connection signal="pressed" from="Node/HSplit/CenterRow/Buttons/Continue" to="." method="_on_Continue_pressed"]
+[connection signal="pressed" from="Node/HSplit/CenterRow/Buttons/Ranking" to="." method="_on_Ranking_pressed"]
+[connection signal="pressed" from="Node/HSplit/CenterRow/Buttons/Exit" to="." method="_on_Exit_pressed"]
+[connection signal="pressed" from="Node/HSplit/CenterRow/Buttons/Boss" to="." method="_on_Boss_pressed"]
+[connection signal="animation_finished" from="FadeIn/AnimationPlayer" to="." method="_on_AnimationPlayer_animation_finished"]

@@ -99,11 +99,18 @@ func hit(dmg,type,direction):
 			motion = Vector2(0,0)
 			$AnimatedSprite.play("dead")
 			if direction == 1:
-				$AnimatedSprite.rotation_degrees = -160
-			else:
 				$AnimatedSprite.rotation_degrees = 160
-			position = Vector2(position.x, position.y + 15)
-			$CollisionShape2D.set_deferred("disabled", true) # Important fer-ho deferred
+			else:
+				$AnimatedSprite.rotation_degrees = -160
+
+			$CollisionShape2D.rotation_degrees = 90
+			$AnimatedSprite.position.y = 4
+			
+			#$CollisionShape2D.set_deferred("disabled", true) # Important fer-ho deferred
+			set_collision_mask_bit(0, false)
+			set_collision_layer_bit(0, false)
+			set_collision_mask_bit(2, true)
+			set_collision_layer_bit(2, true)
 			$DespawnTimer.start()
 			
 			get_tree().call_group("player","recieve_souls",soul_value)
@@ -117,6 +124,7 @@ func hit(dmg,type,direction):
 			#is_positioned = false
 
 func _physics_process(delta):
+	motion.y += G
 	if not is_dead:
 #		if hp > 20 * max_hp / 100:
 #			$HPBar.modulate = "8cff23"
@@ -316,16 +324,23 @@ func _physics_process(delta):
 			is_about_to_fall = false
 			is_positioned = false
 		
-		motion.y += G
+		
 		#if is_being_hit or is_idle:
 		if is_idle or is_alarmed:
 			motion = Vector2(0,0)
-		motion = move_and_slide(motion, UP)
+		
 		if get_slide_count() > 0:
 			for i in range(get_slide_count()):
 				if get_slide_collision(i).collider in get_tree().get_nodes_in_group("instakill") and not is_dead:
-					hit(1000, "Melee", 1)
-		
+					hit(1000, "Melee", 1)	
+	else:
+		if motion.x > 0:
+			motion.x -= 2
+		elif motion.x < 0:
+			motion.x += 2
+	
+	motion = move_and_slide(motion, UP)
+	
 	$StateLabel.text = state
 	$Label2.text = str(sta)
 	$Label3.text = str(is_on_floor())

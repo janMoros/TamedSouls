@@ -19,16 +19,6 @@ func _ready():
 #	lifeNum.text = str(max_hp)
 #	lifeNum.text = str(max_sta)
 	
-	# Connecta el signal des de Input que indica si hi ha un canvi en la connexió del controller
-	Input.connect("joy_connection_changed", self, "_on_joy_connection_changed")
-	var joypads = Input.get_connected_joypads()
-	if joypads.empty():
-		# $keyboardGuide.visible = true
-		print("no controller")
-	else:
-		# $controllerGuide.visible = true
-		print("yes controller")
-	
 	var SaveData = Save.load_data()
 	
 	if typeof(SaveData) != TYPE_DICTIONARY: # O hi ha hagut un error o no existeix
@@ -57,11 +47,3 @@ func update_estus(new_value):
 
 func update_souls(new_value):
 	SoulCount.text = str(new_value)
-
-func _on_joy_connection_changed(device_id, connected):
-	if connected:
-		# $controllerGuide.visible = true
-		print("controller connected")
-	else:
-		# $keyboardGuide.visible = true
-		print("controller disconnected")

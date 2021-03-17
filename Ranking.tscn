@@ -1,0 +1,178 @@
+[gd_scene load_steps=7 format=2]
+
+[ext_resource path="res://Comfortaa-Bold.ttf" type="DynamicFontData" id=1]
+[ext_resource path="res://Ranking.gd" type="Script" id=2]
+[ext_resource path="res://button_font.tres" type="DynamicFont" id=3]
+[ext_resource path="res://theme_noBorderFocus.tres" type="Theme" id=4]
+
+[sub_resource type="DynamicFont" id=1]
+size = 42
+outline_size = 5
+outline_color = Color( 0, 0, 0, 1 )
+extra_spacing_bottom = 20
+font_data = ExtResource( 1 )
+
+[sub_resource type="DynamicFont" id=2]
+size = 19
+outline_size = 4
+outline_color = Color( 0, 0, 0, 1 )
+extra_spacing_bottom = 25
+font_data = ExtResource( 1 )
+
+[node name="Menu" type="Node"]
+script = ExtResource( 2 )
+menu_scene = "res://Menu.tscn"
+
+[node name="Node" type="MarginContainer" parent="."]
+anchor_right = 1.0
+anchor_bottom = 1.0
+margin_left = 100.0
+margin_top = 60.0
+margin_right = -100.0
+margin_bottom = -51.0
+__meta__ = {
+"_edit_use_anchors_": false
+}
+
+[node name="HSplit" type="VBoxContainer" parent="Node"]
+margin_right = 824.0
+margin_bottom = 509.0
+
+[node name="Title" type="Label" parent="Node/HSplit"]
+margin_right = 824.0
+margin_bottom = 67.0
+custom_fonts/font = SubResource( 1 )
+custom_colors/font_color = Color( 0.956863, 0.552941, 0.0784314, 1 )
+text = "Rànking"
+align = 1
+
+[node name="CenterRow" type="HBoxContainer" parent="Node/HSplit"]
+margin_top = 71.0
+margin_right = 824.0
+margin_bottom = 509.0
+size_flags_vertical = 3
+alignment = 1
+
+[node name="Buttons" type="VBoxContainer" parent="Node/HSplit/CenterRow"]
+margin_right = 824.0
+margin_bottom = 438.0
+size_flags_horizontal = 3
+size_flags_vertical = 3
+custom_constants/separation = 30
+alignment = 1
+
+[node name="HBoxContainer" type="HBoxContainer" parent="Node/HSplit/CenterRow/Buttons"]
+margin_right = 824.0
+margin_bottom = 362.0
+size_flags_vertical = 4
+
+[node name="Curt" type="VBoxContainer" parent="Node/HSplit/CenterRow/Buttons/HBoxContainer"]
+margin_right = 272.0
+margin_bottom = 362.0
+size_flags_horizontal = 3
+size_flags_vertical = 0
+custom_constants/separation = 25
+
+[node name="Title" type="Label" parent="Node/HSplit/CenterRow/Buttons/HBoxContainer/Curt"]
+margin_right = 272.0
+margin_bottom = 40.0
+custom_fonts/font = ExtResource( 3 )
+custom_colors/font_color = Color( 0.835294, 0.776471, 0.156863, 1 )
+text = "Curt"
+align = 1
+
+[node name="Llista" type="Label" parent="Node/HSplit/CenterRow/Buttons/HBoxContainer/Curt"]
+margin_top = 65.0
+margin_right = 272.0
+margin_bottom = 362.0
+custom_fonts/font = SubResource( 2 )
+text = "Jan4567890 00:00 10000 à.
+Jan 00:00 1000 à.
+Jan 00:00 1000 à.
+Jan 00:00 1000 à.
+Jan 00:00 1000 à.
+"
+align = 1
+valign = 1
+
+[node name="Mig" type="VBoxContainer" parent="Node/HSplit/CenterRow/Buttons/HBoxContainer"]
+margin_left = 276.0
+margin_right = 548.0
+margin_bottom = 312.0
+size_flags_horizontal = 3
+size_flags_vertical = 0
+custom_constants/separation = 25
+
+[node name="Title" type="Label" parent="Node/HSplit/CenterRow/Buttons/HBoxContainer/Mig"]
+margin_right = 272.0
+margin_bottom = 40.0
+custom_fonts/font = ExtResource( 3 )
+custom_colors/font_color = Color( 0.835294, 0.776471, 0.156863, 1 )
+text = "Mitjà"
+align = 1
+
+[node name="Llista2" type="Label" parent="Node/HSplit/CenterRow/Buttons/HBoxContainer/Mig"]
+margin_top = 65.0
+margin_right = 272.0
+margin_bottom = 312.0
+custom_fonts/font = SubResource( 2 )
+text = "Jan4567890 00:00 10000 à.
+Jan 00:00 1000 à.
+Jan 00:00 1000 à.
+Jan 00:00 1000 à.
+Jan 00:00 1000 à."
+align = 1
+valign = 1
+
+[node name="Llarg" type="VBoxContainer" parent="Node/HSplit/CenterRow/Buttons/HBoxContainer"]
+margin_left = 552.0
+margin_right = 824.0
+margin_bottom = 312.0
+size_flags_horizontal = 3
+size_flags_vertical = 0
+custom_constants/separation = 25
+
+[node name="Title" type="Label" parent="Node/HSplit/CenterRow/Buttons/HBoxContainer/Llarg"]
+margin_right = 272.0
+margin_bottom = 40.0
+custom_fonts/font = ExtResource( 3 )
+custom_colors/font_color = Color( 0.835294, 0.776471, 0.156863, 1 )
+text = "Llarg"
+align = 1
+
+[node name="Llista3" type="Label" parent="Node/HSplit/CenterRow/Buttons/HBoxContainer/Llarg"]
+margin_top = 65.0
+margin_right = 272.0
+margin_bottom = 312.0
+custom_fonts/font = SubResource( 2 )
+text = "Jan4567890 00:00 10000 à.
+Jan 00:00 1000 à.
+Jan 00:00 1000 à.
+Jan 00:00 1000 à.
+Jan 00:00 1000 à."
+align = 1
+valign = 1
+
+[node name="Node2" type="CenterContainer" parent="Node/HSplit/CenterRow/Buttons"]
+margin_top = 392.0
+margin_right = 824.0
+margin_bottom = 438.0
+size_flags_vertical = 3
+
+[node name="Back" type="Button" parent="Node/HSplit/CenterRow/Buttons/Node2"]
+margin_left = 262.0
+margin_right = 561.0
+margin_bottom = 46.0
+rect_min_size = Vector2( 122, 35 )
+theme = ExtResource( 4 )
+custom_fonts/font = ExtResource( 3 )
+custom_colors/font_color_disabled = Color( 0.713726, 0.698039, 0.666667, 1 )
+custom_colors/font_color = Color( 0.854902, 0.65098, 0.117647, 1 )
+custom_colors/font_color_hover = Color( 1, 0.866667, 0, 1 )
+custom_colors/font_color_pressed = Color( 1, 1, 1, 1 )
+text = "Tornar al menú"
+flat = true
+__meta__ = {
+"_edit_use_anchors_": false
+}
+[connection signal="pressed" from="Node/HSplit/CenterRow/Buttons/Node2/Back" to="." method="_on_Back_pressed"]

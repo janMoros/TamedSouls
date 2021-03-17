@@ -24,7 +24,7 @@ func _physics_process(delta):
 					"respawn":
 						if player.souls - SPAWN_POINT_PRICE >= 0:
 							player.spend_souls(SPAWN_POINT_PRICE)
-							print(Save.save_data(player.hp,player.estus,player.sta,player.souls,player.cages_cleared)) #ojut el position
+							print(Save.save_data(player.hp,player.estus,player.sta,player.souls,player.cages_cleared,player.time)) #ojut el position
 							#Global.player_save_position = Vector2(global_position.x, global_position.y - 64)
 							
 							get_parent().get_parent().save_from_campfire(global_position)
@@ -75,6 +75,21 @@ func _on_Campfire_body_entered(body):
 				$hp.visible = false
 				$respawn.visible = false
 				$estus.visible = true
+		
+		if Global.controller_connected:
+			$hp/B.visible = true
+			$hp/B_key.visible = false
+			$respawn/B.visible = true
+			$respawn/B_key.visible = false
+			$estus/B.visible = true
+			$estus/B_key.visible = false
+		else:
+			$hp/B.visible = false
+			$hp/B_key.visible = true
+			$respawn/B.visible = false
+			$respawn/B_key.visible = true
+			$estus/B.visible = false
+			$estus/B_key.visible = true
 
 func _on_Campfire_body_exited(body):
 	if body.is_in_group("player"):

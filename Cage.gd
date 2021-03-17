@@ -16,8 +16,14 @@ func _physics_process(delta):
 				$DespawnTimer.start()
 				$Label.visible = false
 				is_opened = true
+				
 				player.cages_cleared += 1
-				# Guardar a algun lloc que aquest ja ha sigut rescatat (per posar-ho dps a save.dat)
+				
+				# Baixa la vida del boss directament quan la pilles
+				var bosses = get_tree().get_nodes_in_group("boss")
+				if not bosses.empty():
+					var boss = bosses[0]
+					boss.starting_hp -= 0.15 * boss.max_hp
 				
 func _on_Cage_body_entered(body):
 	if not is_opened:
@@ -25,6 +31,13 @@ func _on_Cage_body_entered(body):
 			is_inside = true
 			$Label.visible = true
 			player = body
+			
+		if Global.controller_connected:
+			$Label/B.visible = true
+			$Label/B_key.visible = false
+		else:
+			$Label/B.visible = false
+			$Label/B_key.visible = true
 
 
 func _on_Cage_body_exited(body):

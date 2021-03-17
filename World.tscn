@@ -86,6 +86,8 @@ script = ExtResource( 9 )
 
 [node name="TileMap" type="TileMap" parent="."]
 tile_set = ExtResource( 2 )
+collision_layer = 5
+collision_mask = 5
 format = 1
 
 [node name="Spikes" type="TileMap" parent="." groups=[
@@ -93,6 +95,8 @@ format = 1
 ]]
 tile_set = ExtResource( 6 )
 cell_size = Vector2( 32, 32 )
+collision_layer = 5
+collision_mask = 5
 format = 1
 
 [node name="Elements" type="TileMap" parent="."]
@@ -118,6 +122,6 @@ shape = SubResource( 2 )
 
 [node name="BossRoomEntrance" type="Area2D" parent="."]
 
-[node name="CollisionShape2D2" type="CollisionShape2D" parent="BossRoomEntrance"]
+[node name="CollisionShape2D" type="CollisionShape2D" parent="BossRoomEntrance"]
 shape = SubResource( 2 )
 [connection signal="body_entered" from="BossRoomEntrance" to="." method="_on_BossRoomEntrance_body_entered"]
